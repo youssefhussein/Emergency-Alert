@@ -1,8 +1,14 @@
 import 'package:emergency_alert/screens/emergency_list.dart';
 import 'package:flutter/material.dart';
 
-void main() {
-  runApp(const MainApp());
+
+
+const supabaseUrl = 'https://htmgggbripfonipfeuun.supabase.co';
+const supabaseKey = String.fromEnvironment('SUPABASE_KEY');
+
+Future<void> main() async {
+  await Supabase.initialize(url: supabaseUrl, anonKey: supabaseKey);
+  runApp(const MyApp());
 }
 
 class MainApp extends StatelessWidget {
