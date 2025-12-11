@@ -1,10 +1,13 @@
-import 'package:emergency_alert/screens/emergency_list.dart';
+import 'package:emergency_alert/screens/emergency/emergency_list.dart';
+import 'package:emergency_alert/screens/auth/signup.dart';
+//import 'package:emergency_aler/';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-
 Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load();
   final supabaseUrl = dotenv.get("SUPABASE_URL");
   final supabaseKey = dotenv.get("SUPABASE_KEY");
@@ -18,14 +21,15 @@ class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         //we should do our color palette here https://docs.flutter.dev/cookbook/design/themes
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue) ,
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
       ),
       home: const Scaffold(
         body: SafeArea(
           //temporary , please change this to an actual home scree that includes the list
-          child: Center(child: EmergencyList()),
+          child: Center(child: SignupScreen()),
         ),
       ),
     );
