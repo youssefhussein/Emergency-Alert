@@ -1,3 +1,4 @@
+import 'package:emergency_alert/screens/auth/signup.dart';
 import 'package:flutter/material.dart';
 
 //static list of the emergencies , gonna make it so when u tap a card it takes you to a new screen (and passing its props)
@@ -9,12 +10,21 @@ class EmergencyList extends StatelessWidget {
     return
         ListView(
           children: [
-
+            Card(
+              color: Colors.blueAccent,
+              child: ListTile(
+                leading: Icon(Icons.login_rounded),
+                title: Text('Signuppp'),
+                subtitle: Text("Signup"),
+                trailing: Icon(Icons.arrow_forward_rounded),
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => SignupScreen())),
+              ),
+            ),
             Card(
               color: Colors.blueAccent,
               child: ListTile(
                 leading: Icon(Icons.local_police_rounded),
-                title: Text('Police'),
+                title: Text('Signup page'),
                 subtitle: Text("Call your local police station"),
                 trailing: Icon(Icons.arrow_forward_rounded),
               ),
