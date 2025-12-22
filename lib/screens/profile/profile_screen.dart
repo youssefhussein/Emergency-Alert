@@ -214,7 +214,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 children: [
                   _ProfileItem(
                     icon: Icons.person_outline,
-                    title: 'Edit Profile & Emergency Info',
+                    title: 'Emergency Info',
                     subtitle: 'Name, age, gender, status, medical info',
                     onTap: () {
                       Navigator.push(
