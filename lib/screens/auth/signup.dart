@@ -1,4 +1,4 @@
-import 'package:emergency_alert/screens/emergency_list.dart';
+import 'package:emergency_alert/screens/emergency/emergency_list_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'login.dart';
@@ -47,7 +47,9 @@ class _SignupScreenState extends State<SignupScreen> {
       );
       Navigator.push(
         context,
-        MaterialPageRoute<void>(builder: (context) => const EmergencyList()),
+        MaterialPageRoute<void>(
+          builder: (context) => const EmergencyListScreen(),
+        ),
       );
     } on AuthException catch (e) {
       setState(() => _error = e.message);
@@ -112,7 +114,10 @@ class _SignupScreenState extends State<SignupScreen> {
                   ),
                   const SizedBox(height: 12),
                   TextButton(
-                    onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => LoginScreen())),
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => LoginScreen()),
+                    ),
                     child: const Text('Already have an account? Login'),
                   ),
                 ],

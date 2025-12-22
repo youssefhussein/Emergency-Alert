@@ -1,4 +1,4 @@
-import 'package:emergency_alert/screens/emergency_list.dart';
+import 'package:emergency_alert/screens/emergency/emergency_list_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'signup.dart';
@@ -38,7 +38,10 @@ class _LoginScreenState extends State<LoginScreen> {
       );
       if (res.session != null) {
         if (!mounted) return;
-        Navigator.push(context, MaterialPageRoute(builder: (context) => const EmergencyList()));
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const EmergencyListScreen()),
+        );
       }
     } on AuthException catch (e) {
       setState(() => _error = e.message);
@@ -66,20 +69,26 @@ class _LoginScreenState extends State<LoginScreen> {
                   if (_error != null)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 8.0),
-                      child: Text(_error!, style: const TextStyle(color: Colors.red)),
+                      child: Text(
+                        _error!,
+                        style: const TextStyle(color: Colors.red),
+                      ),
                     ),
                   TextFormField(
                     controller: _emailCtrl,
                     keyboardType: TextInputType.emailAddress,
                     decoration: const InputDecoration(labelText: 'Email'),
-                    validator: (v) => v != null && v.contains('@') ? null : 'Enter a valid email',
+                    validator: (v) => v != null && v.contains('@')
+                        ? null
+                        : 'Enter a valid email',
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: _passwordCtrl,
                     obscureText: true,
                     decoration: const InputDecoration(labelText: 'Password'),
-                    validator: (v) => v != null && v.length >= 6 ? null : 'Min 6 characters',
+                    validator: (v) =>
+                        v != null && v.length >= 6 ? null : 'Min 6 characters',
                   ),
                   const SizedBox(height: 20),
                   SizedBox(
@@ -87,15 +96,22 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: FilledButton(
                       onPressed: _loading ? null : _login,
                       child: _loading
-                          ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
                           : const Text('Login'),
                     ),
                   ),
                   const SizedBox(height: 12),
                   TextButton(
-                    onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => SignupScreen())),
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => SignupScreen()),
+                    ),
                     child: const Text("Don't have an account? Register"),
-                  )
+                  ),
                 ],
               ),
             ),
