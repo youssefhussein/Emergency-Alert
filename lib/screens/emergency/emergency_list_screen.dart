@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../main.dart'; // gives access to themeController
 
 import '../../services/emergency_service.dart';
 import '../../services/emergency_request_service.dart';
@@ -16,11 +17,16 @@ class EmergencyListScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final requestService = EmergencyRequestService(Supabase.instance.client);
-
+    final theme = Theme.of(context);
+    final c = theme.colorScheme;
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FB),
+      // backgroundColor: const Color(0xFFF5F7FB),
+      backgroundColor: c.background,
+
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        // backgroundColor: Colors.white,
+        backgroundColor: c.surface,
+        foregroundColor: c.onSurface,
         elevation: 0,
         titleSpacing: 0,
         title: const Text(

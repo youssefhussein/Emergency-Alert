@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../services/emergency_service.dart';
 import 'send_info_form_screen.dart';
+import '../../main.dart'; // gives access to themeController
 
 class EmergencyDetailScreen extends StatelessWidget {
   final EmergencyService service;
@@ -10,10 +11,16 @@ class EmergencyDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final c = theme.colorScheme;
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FB),
+      // backgroundColor: const Color(0xFFF5F7FB),
+      backgroundColor: c.background,
+
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        // backgroundColor: Colors.white,
+        backgroundColor: c.surface,
+        foregroundColor: c.onSurface,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
