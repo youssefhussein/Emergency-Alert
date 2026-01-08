@@ -10,16 +10,7 @@ import '../../models/user_profile.dart';
 import '../../services/profile_service.dart';
 import '../../services/contact_permissions_service.dart';
 import 'package:emergency_alert/models/contact_permissions.dart';
-// import 'package:emergency_alert/services/profile_service.dart';
-// import 'package:flutter/material.dart';
-// import 'package:supabase_flutter/supabase_flutter.dart';
 
-// import '../../models/contact.dart';
-// import '../../models/user_profile.dart';
-// import '../../models/contact_permissions.dart';
-// import '../../services/profile_service.dart';
-// import '../../services/contact_permissions_service.dart';
-// import '../../models/contact_permissions.dart';
 
 class ViewContactProfileScreen extends StatefulWidget {
   final Contact contact;

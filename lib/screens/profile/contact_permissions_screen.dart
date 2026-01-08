@@ -1,7 +1,9 @@
+
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../services/contact_permissions_service.dart';
+import '../../widgets/profile/permissions_switch_card.dart';
 
 class ContactPermissionsScreen extends StatefulWidget {
   final String contactUserId;
@@ -42,9 +44,7 @@ class _ContactPermissionsScreenState extends State<ContactPermissionsScreen> {
 
     try {
       final user = Supabase.instance.client.auth.currentUser;
-      if (user == null) {
-        throw Exception('Not logged in');
-      }
+      if (user == null) throw Exception('Not logged in');
 
       final perms = await _permService.getPermissions(
         ownerId: user.id,
@@ -59,18 +59,14 @@ class _ContactPermissionsScreenState extends State<ContactPermissionsScreen> {
     } catch (e) {
       _error = 'Failed to load permissions: $e';
     } finally {
-      if (mounted) {
-        setState(() => _loading = false);
-      }
+      if (mounted) setState(() => _loading = false);
     }
   }
 
   Future<void> _save() async {
     try {
       final user = Supabase.instance.client.auth.currentUser;
-      if (user == null) {
-        throw Exception('Not logged in');
-      }
+      if (user == null) throw Exception('Not logged in');
 
       await _permService.setPermissions(
         ownerId: user.id,
@@ -121,40 +117,13 @@ class _ContactPermissionsScreenState extends State<ContactPermissionsScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                Card(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(18),
-                  ),
-                  child: Column(
-                    children: [
-                      SwitchListTile(
-                        title: const Text('Live status'),
-                        subtitle: const Text(
-                          'Safe, need help, at hospital, in danger',
-                        ),
-                        value: shareStatus,
-                        onChanged: (v) => setState(() => shareStatus = v),
-                      ),
-                      const Divider(height: 0),
-                      SwitchListTile(
-                        title: const Text('Medical & emergency info'),
-                        subtitle: const Text(
-                          'Blood type, allergies, medications',
-                        ),
-                        value: shareMedical,
-                        onChanged: (v) => setState(() => shareMedical = v),
-                      ),
-                      const Divider(height: 0),
-                      SwitchListTile(
-                        title: const Text('Approximate location'),
-                        subtitle: const Text(
-                          'Only when you send an emergency alert',
-                        ),
-                        value: shareLocation,
-                        onChanged: (v) => setState(() => shareLocation = v),
-                      ),
-                    ],
-                  ),
+                PermissionsSwitchCard(
+                  shareStatus: shareStatus,
+                  shareMedical: shareMedical,
+                  shareLocation: shareLocation,
+                  onStatusChanged: (v) => setState(() => shareStatus = v),
+                  onMedicalChanged: (v) => setState(() => shareMedical = v),
+                  onLocationChanged: (v) => setState(() => shareLocation = v),
                 ),
                 const SizedBox(height: 24),
                 FilledButton(onPressed: _save, child: const Text('Save')),

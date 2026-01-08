@@ -1,177 +1,176 @@
+
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../models/contact.dart';
-import '../../services/contacts_service.dart';
 import 'view_contact_profile_screen.dart';
+import '../../widgets/profile/contact_card_tile.dart';
 
-class ContactsScreen extends StatefulWidget {
+import 'contacts_provider.dart';
+import 'contacts_state.dart';
+
+class ContactsScreen extends ConsumerStatefulWidget {
   const ContactsScreen({super.key});
 
   @override
-  State<ContactsScreen> createState() => _ContactsScreenState();
+  ConsumerState<ContactsScreen> createState() => _ContactsScreenState();
 }
 
-class _ContactsScreenState extends State<ContactsScreen> {
-  late final ContactsService _contactsService;
-  bool _loading = true;
-  String? _error;
-  List<Contact> _contacts = [];
-
+class _ContactsScreenState extends ConsumerState<ContactsScreen> {
   @override
   void initState() {
     super.initState();
-    _contactsService = ContactsService(Supabase.instance.client);
-    _load();
-  }
-
-  Future<void> _load() async {
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
-    try {
-      final list = await _contactsService.getContactsForCurrentUser();
-      if (!mounted) return;
-      setState(() => _contacts = list);
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _error = e.toString());
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
+    // Load once when screen opens
+    Future.microtask(() => ref.read(contactsProvider.notifier).load());
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+
+    final state = ref.watch(contactsProvider);
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F5F7),
+      backgroundColor: cs.background,
       appBar: AppBar(
+        backgroundColor: cs.surface,
+        foregroundColor: cs.onSurface,
         title: const Text('Emergency Contacts'),
-        actions: const [
-          Icon(Icons.search),
-          SizedBox(width: 12),
-          Icon(Icons.filter_list_rounded),
-          SizedBox(width: 12),
+        actions: [
+          // keep your icons if you want the same look (search/filter)
+          IconButton(
+            tooltip: 'Search (UI only)',
+            onPressed: () {},
+            icon: const Icon(Icons.search),
+          ),
+
+          // SORT (requirement)
+          PopupMenuButton<ContactsSort>(
+            tooltip: 'Sort',
+            icon: const Icon(Icons.filter_list_rounded),
+            onSelected: (v) => ref.read(contactsProvider.notifier).setSort(v),
+            itemBuilder: (_) => const [
+              PopupMenuItem(
+                value: ContactsSort.favoritesFirst,
+                child: Text('Favorites first'),
+              ),
+              PopupMenuItem(
+                value: ContactsSort.nameAsc,
+                child: Text('Name A → Z'),
+              ),
+            ],
+          ),
+          const SizedBox(width: 8),
         ],
       ),
       body: RefreshIndicator(
-        onRefresh: _load,
-        child: _loading
+        onRefresh: () => ref.read(contactsProvider.notifier).load(),
+        child: state.loading
             ? const Center(child: CircularProgressIndicator())
-            : _error != null
+            : state.error != null
             ? ListView(
                 children: [
                   const SizedBox(height: 120),
-                  Center(child: Text(_error!)),
+                  Center(child: Text(state.error!)),
+                ],
+              )
+            : state.items.isEmpty
+            ? ListView(
+                children: const [
+                  SizedBox(height: 120),
+                  Center(child: Text('No contacts yet.')),
                 ],
               )
             : ListView.builder(
                 padding: const EdgeInsets.all(16),
-                itemCount: _contacts.length,
+                itemCount: state.items.length,
                 itemBuilder: (context, index) {
-                  final c = _contacts[index];
+                  final Contact c = state.items[index];
+                  final bool isFav = state.favorites.contains(c.id);
+
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 12),
-                    child: Material(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(16),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) =>
-                                  ViewContactProfileScreen(contact: c),
-                            ),
-                          );
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 10,
-                          ),
-                          child: Row(
-                            children: [
-                              CircleAvatar(
-                                radius: 24,
-                                child: Text(
-                                  c.name.isNotEmpty
-                                      ? c.name[0].toUpperCase()
-                                      : '?',
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      c.name,
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      c.relation ?? 'Contact',
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              _statusChip(c.status),
-                            ],
-                          ),
+                    child: Dismissible(
+                      key: ValueKey(c.id),
+                      direction: DismissDirection.endToStart,
+                      background: Container(
+                        alignment: Alignment.centerRight,
+                        padding: const EdgeInsets.symmetric(horizontal: 18),
+                        decoration: BoxDecoration(
+                          color: cs.errorContainer,
+                          borderRadius: BorderRadius.circular(18),
                         ),
+                        child: Icon(Icons.delete, color: cs.onErrorContainer),
+                      ),
+                      onDismissed: (_) async {
+                        final removed = await ref
+                            .read(contactsProvider.notifier)
+                            .deleteContact(c.id);
+
+                        if (!context.mounted || removed == null) return;
+
+                        ScaffoldMessenger.of(context).clearSnackBars();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Deleted ${removed.name}'),
+                            action: SnackBarAction(
+                              label: 'UNDO',
+                              onPressed: () {
+                                ref
+                                    .read(contactsProvider.notifier)
+                                    .undoDelete(removed, index: index);
+                              },
+                            ),
+                          ),
+                        );
+                      },
+                      child: Stack(
+                        children: [
+                          // Your existing tile (same design)
+                          ContactCardTile(
+                            contact: c,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      ViewContactProfileScreen(contact: c),
+                                ),
+                              );
+                            },
+                          ),
+
+                          // FAVORITE button (requirement) - overlays without redesigning the tile
+                          Positioned(
+                            right: 8,
+                            top: 8,
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(999),
+                                onTap: () {
+                                  ref
+                                      .read(contactsProvider.notifier)
+                                      .toggleFavorite(c.id);
+                                },
+                                child: Padding(
+                                  padding: const EdgeInsets.all(6),
+                                  child: Icon(
+                                    isFav ? Icons.star : Icons.star_border,
+                                    color: isFav ? cs.primary : cs.outline,
+                                    size: 22,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   );
                 },
               ),
-      ),
-    );
-  }
-
-  Widget _statusChip(String status) {
-    String text = status;
-    Color color;
-    Color bg;
-
-    switch (status) {
-      case 'active':
-        color = const Color(0xFF2E7D32);
-        bg = const Color(0xFFE8F5E9);
-        text = 'Active';
-        break;
-      case 'pending':
-        color = const Color(0xFF2962FF);
-        bg = const Color(0xFFE3F2FD);
-        text = 'Pending';
-        break;
-      default:
-        color = Colors.grey.shade700;
-        bg = Colors.grey.shade200;
-        break;
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          color: color,
-          fontSize: 11,
-          fontWeight: FontWeight.w500,
-        ),
       ),
     );
   }
