@@ -1,17 +1,27 @@
-import 'package:emergency_alert/screens/auth/signup.dart';
-import 'package:emergency_alert/screens/emergency/emergency_list_screen.dart';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'screens/auth/signup.dart';
+import 'package:emergency_alert/app_theme.dart';
+import 'package:emergency_alert/theme_controller.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+late final ThemeController themeController;
 
 Future<void> main() async {
-  await dotenv.load(fileName: ".env");
-  final supabaseUrl = dotenv.get("SUPABASE_URL");
-  final supabaseKey = dotenv.get("SUPABASE_KEY");
-  await Supabase.initialize(url: supabaseUrl, anonKey: supabaseKey);
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const MainApp());
+
+  // Load theme choice BEFORE runApp
+  themeController = await ThemeController.load();
+
+  await dotenv.load(fileName: ".env");
+  await Supabase.initialize(
+    url: dotenv.get("SUPABASE_URL"),
+    anonKey: dotenv.get("SUPABASE_KEY"),
+  );
+
+  // runApp(const MainApp());
+  runApp(const ProviderScope(child: MainApp()));
 }
 
 class MainApp extends StatelessWidget {
@@ -19,18 +29,17 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        //we should do our color palette here https://docs.flutter.dev/cookbook/design/themes
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-      ),
-      home: const Scaffold(
-        body: SafeArea(
-          //temporary , please change this to an actual home scree that includes the list
-          child: Center(child: SignupScreen()),
-        ),
-      ),
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: themeController,
+      builder: (context, mode, _) {
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.light(),
+          darkTheme: AppTheme.dark(),
+          themeMode: mode,
+          home: const SignupScreen(),
+        );
+      },
     );
   }
 }

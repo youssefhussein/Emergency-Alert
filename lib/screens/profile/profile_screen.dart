@@ -1,4 +1,3 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -7,10 +6,13 @@ import '../../services/profile_service.dart';
 
 import 'edit_profile_screen.dart';
 import 'contacts_screen.dart';
-
 import 'people_who_added_me_screen.dart';
 
 import 'package:emergency_alert/screens/auth/login.dart';
+import '../../main.dart';
+
+import 'package:emergency_alert/widgets/profile/profile_header_card.dart';
+import 'package:emergency_alert/widgets/profile/profile_menu_item.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -57,23 +59,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  Color _statusColor(String? status, ThemeData theme) {
-    switch (status) {
-      case 'safe':
-        return Colors.green;
-      case 'need_help':
-        return Colors.orange;
-      case 'at_hospital':
-        return Colors.blue;
-      case 'in_danger':
-        return Colors.red;
-      case 'unavailable':
-        return theme.colorScheme.outline;
-      default:
-        return theme.colorScheme.outline;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -100,101 +85,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
               const SizedBox(height: 8),
             ],
 
-            // ===== Header: avatar + basic info =====
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surface,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                    color: Colors.black.withOpacity(0.1),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 32,
-                    backgroundImage: avatarUrl != null
-                        ? CachedNetworkImageProvider(avatarUrl)
-                        : null,
-                    child: avatarUrl == null
-                        ? Text(
-                            name.isNotEmpty ? name[0].toUpperCase() : '?',
-                            style: const TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          )
-                        : null,
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          name,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          email,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurface.withOpacity(0.7),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: _statusColor(status, theme).withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(999),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.circle,
-                                color: _statusColor(status, theme),
-                                size: 10,
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                _statusLabels[status] ?? status,
-                                style: TextStyle(
-                                  color: _statusColor(status, theme),
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.edit_outlined),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const EditProfileScreen(),
-                        ),
-                      ).then((_) => _loadProfile());
-                    },
-                  ),
-                ],
-              ),
+            ProfileHeaderCard(
+              name: name,
+              email: email,
+              avatarUrl: avatarUrl,
+              status: status,
+              statusLabels: _statusLabels,
+              onEdit: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const EditProfileScreen()),
+                ).then((_) => _loadProfile());
+              },
             ),
 
             const SizedBox(height: 24),
@@ -212,7 +114,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               child: Column(
                 children: [
-                  _ProfileItem(
+                  ProfileMenuItem(
                     icon: Icons.person_outline,
                     title: 'Emergency Info',
                     subtitle: 'Name, age, gender, status, medical info',
@@ -225,9 +127,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ).then((_) => _loadProfile());
                     },
                   ),
-
                   const Divider(height: 0),
-                  _ProfileItem(
+                  ProfileMenuItem(
                     icon: Icons.contacts_outlined,
                     title: 'Emergency Contacts',
                     subtitle: 'People you rely on in emergencies',
@@ -241,22 +142,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     },
                   ),
                   const Divider(height: 0),
-                  _ProfileItem(
-                    icon: Icons.lock_person_outlined,
-                    title: 'Contact Permissions',
-                    subtitle: 'Manage what your contacts can see',
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const ContactsScreen(),
-                        ),
-                      );
-                    },
-                  ),
-
-                  const Divider(height: 0),
-                  _ProfileItem(
+                  ProfileMenuItem(
                     icon: Icons.group_outlined,
                     title: 'People Who Added Me',
                     subtitle: 'Users who saved you as contact',
@@ -288,22 +174,57 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               child: Column(
                 children: [
-                  _ProfileItem(
-                    icon: Icons.notifications_outlined,
-                    title: 'Notification Settings',
-                    subtitle: 'Control emergency alerts',
-                    onTap: () {
-                      // TODO: navigate to settings screen
+                  ListTile(
+                    leading: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: theme.colorScheme.primary.withOpacity(0.08),
+                      ),
+                      child: Icon(
+                        Icons.dark_mode_outlined,
+                        size: 20,
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                    title: Text(
+                      'Dark Mode',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    subtitle: Text(
+                      themeController.isSystem
+                          ? 'System default'
+                          : (themeController.isDark ? 'Enabled' : 'Disabled'),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurface.withOpacity(0.7),
+                      ),
+                    ),
+                    trailing: Switch(
+                      value: themeController.isDark,
+                      onChanged: (v) {
+                        setState(() => themeController.setDark(v));
+                      },
+                    ),
+                    onLongPress: () {
+                      setState(() => themeController.setSystem());
                     },
                   ),
                   const Divider(height: 0),
-                  _ProfileItem(
+                  ProfileMenuItem(
+                    icon: Icons.notifications_outlined,
+                    title: 'Notification Settings',
+                    subtitle: 'Control emergency alerts',
+                    onTap: () {},
+                  ),
+                  const Divider(height: 0),
+                  ProfileMenuItem(
                     icon: Icons.language_outlined,
                     title: 'Language',
                     subtitle: 'Change app language',
-                    onTap: () {
-                      // TODO: language screen
-                    },
+                    onTap: () {},
                   ),
                 ],
               ),
@@ -368,13 +289,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   },
                 );
 
-                if (confirmed != true) {
-                  return;
-                }
+                if (confirmed != true) return;
 
                 try {
                   await _profileService.deleteCurrentUserProfile();
-
                   if (!mounted) return;
 
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -384,7 +302,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   );
 
                   await Supabase.instance.client.auth.signOut();
-
                   if (!mounted) return;
 
                   Navigator.of(context).pushAndRemoveUntil(
@@ -404,53 +321,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ],
         ),
       ),
-    );
-  }
-}
-
-class _ProfileItem extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String? subtitle;
-  final VoidCallback onTap;
-
-  const _ProfileItem({
-    required this.icon,
-    required this.title,
-    this.subtitle,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return ListTile(
-      leading: Container(
-        width: 36,
-        height: 36,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: theme.colorScheme.primary.withOpacity(0.08),
-        ),
-        child: Icon(icon, size: 20, color: theme.colorScheme.primary),
-      ),
-      title: Text(
-        title,
-        style: theme.textTheme.bodyMedium?.copyWith(
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-      subtitle: subtitle != null
-          ? Text(
-              subtitle!,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.7),
-              ),
-            )
-          : null,
-      trailing: const Icon(Icons.chevron_right_rounded),
-      onTap: onTap,
     );
   }
 }
