@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'screens/auth/signup.dart';
+import 'screens/emergency/emergency_list_screen.dart';
 import 'package:emergency_alert/app_theme.dart';
 import 'package:emergency_alert/theme_controller.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -37,9 +38,17 @@ class MainApp extends StatelessWidget {
           theme: AppTheme.light(),
           darkTheme: AppTheme.dark(),
           themeMode: mode,
-          home: const SignupScreen(),
+          home: _getInitialScreen(),
         );
       },
     );
+  }
+
+  Widget _getInitialScreen() {
+    final session = Supabase.instance.client.auth.currentSession;
+    if (session != null) {
+      return const EmergencyListScreen();
+    }
+    return const SignupScreen();
   }
 }

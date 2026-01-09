@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:emergency_alert/screens/emergency/emergency_list_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -18,11 +19,13 @@ class _SignupScreenState extends State<SignupScreen> {
   final _passwordCtrl = TextEditingController();
   bool _loading = false;
   String? _error;
+  StreamSubscription<AuthState>? _authSubscription;
 
   @override
   void dispose() {
     _emailCtrl.dispose();
     _passwordCtrl.dispose();
+    _authSubscription?.cancel();
     super.dispose();
   }
 
@@ -33,30 +36,81 @@ class _SignupScreenState extends State<SignupScreen> {
       _error = null;
     });
     try {
-      await Supabase.instance.client.auth.signUp(
+      final response = await Supabase.instance.client.auth.signUp(
         email: _emailCtrl.text.trim(),
         password: _passwordCtrl.text.trim(),
         data: {'display_name': _emailCtrl.text.trim().split('@')[0]},
       );
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Registration successful. Please check your email if confirmation is required, then login.',
+      // If session exists, user is immediately logged in (email confirmation disabled)
+      if (response.session != null) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute<void>(
+            builder: (context) => const EmergencyListScreen(),
           ),
-        ),
-      );
-      Navigator.push(
-        context,
-        MaterialPageRoute<void>(
-          builder: (context) => const EmergencyListScreen(),
-        ),
-      );
+        );
+      } else {
+        // Email confirmation required
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Registration successful. Please check your email if confirmation is required, then login.',
+            ),
+          ),
+        );
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute<void>(
+            builder: (context) => const LoginScreen(),
+          ),
+        );
+      }
     } on AuthException catch (e) {
       setState(() => _error = e.message);
     } catch (e) {
       setState(() => _error = 'Unexpected error. Please try again.');
     } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _signInWithGoogle() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      // Cancel any existing subscription
+      _authSubscription?.cancel();
+      
+      // Set up a one-time listener for OAuth completion
+      _authSubscription = Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+        if (data.event == AuthChangeEvent.signedIn && data.session != null) {
+          _authSubscription?.cancel();
+          if (mounted) {
+            setState(() => _loading = false);
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const EmergencyListScreen(),
+              ),
+            );
+          }
+        }
+      });
+      
+      await Supabase.instance.client.auth.signInWithOAuth(
+        OAuthProvider.google,
+        redirectTo: 'com.example.emergency_alert://login-callback/',
+      );
+    } on AuthException catch (e) {
+      _authSubscription?.cancel();
+      setState(() => _error = e.message);
+      if (mounted) setState(() => _loading = false);
+    } catch (e) {
+      _authSubscription?.cancel();
+      setState(() => _error = 'Unexpected error. Please try again.');
       if (mounted) setState(() => _loading = false);
     }
   }
@@ -114,10 +168,45 @@ class _SignupScreenState extends State<SignupScreen> {
                     ),
                   ),
                   const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Divider(
+                          thickness: 1,
+                          color: Theme.of(context).dividerColor,
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Text(
+                          'OR',
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: Divider(
+                          thickness: 1,
+                          color: Theme.of(context).dividerColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: _loading ? null : _signInWithGoogle,
+                      icon: const Icon(Icons.login),
+                      label: const Text('Sign up with Google'),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
                   TextButton(
                     onPressed: () => Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => LoginScreen()),
+                      MaterialPageRoute(builder: (context) => const LoginScreen()),
                     ),
                     child: const Text('Already have an account? Login'),
                   ),
