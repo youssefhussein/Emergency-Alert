@@ -16,6 +16,7 @@ import 'dart:typed_data';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
+import 'emergency_followup_screen.dart';
 
 class SendInfoFormScreen extends StatefulWidget {
   final EmergencyService service;
@@ -196,7 +197,7 @@ class _SendInfoFormScreenState extends State<SendInfoFormScreen> {
         }
       }
 
-      await requestService.sendRequest(
+      final emergencyId = await requestService.sendRequest(
         service: widget.service,
         phone: phone,
         description: details,
@@ -220,7 +221,16 @@ class _SendInfoFormScreenState extends State<SendInfoFormScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Emergency request sent successfully')),
       );
-      Navigator.pop(context);
+      // Navigator.pop(context);
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => EmergencyFollowUpScreen(
+            emergencyId: emergencyId,
+            service: widget.service,
+          ),
+        ),
+      );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(
