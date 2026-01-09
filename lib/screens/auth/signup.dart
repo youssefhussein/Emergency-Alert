@@ -35,7 +35,8 @@ class _SignupScreenState extends State<SignupScreen> {
     try {
       await Supabase.instance.client.auth.signUp(
         email: _emailCtrl.text.trim(),
-        password: _passwordCtrl.text,
+        password: _passwordCtrl.text.trim(),
+        data: {'display_name': _emailCtrl.text.trim().split('@')[0]},
       );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
