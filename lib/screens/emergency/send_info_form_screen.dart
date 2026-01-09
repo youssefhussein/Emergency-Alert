@@ -179,7 +179,6 @@ class _SendInfoFormScreenState extends State<SendInfoFormScreen> {
       final details = _detailsCtrl.text.trim();
       final locationDetails = _locationDetailsCtrl.text.trim();
 
-      // If shareLocation is OFF, don't send lat/lng even if detected.
       final lat = _shareLocation ? _lat : null;
       final lng = _shareLocation ? _lng : null;
       Uint8List? voiceBytes;
@@ -200,14 +199,13 @@ class _SendInfoFormScreenState extends State<SendInfoFormScreen> {
       await requestService.sendRequest(
         service: widget.service,
         phone: phone,
-        description: details, 
+        description: details,
         latitude: lat,
         longitude: lng,
         shareLocation: _shareLocation,
         notifyContacts: _notifyTrustedContacts,
         locationDetails: locationDetails.isEmpty ? null : locationDetails,
 
-        // photo -> upload to bucket then save path to emergencies.photo_url
         photoBytes: _photoBytes,
         photoExt: _photoExt,
         photoContentType: _photoContentType,
@@ -273,9 +271,7 @@ class _SendInfoFormScreenState extends State<SendInfoFormScreen> {
           ),
           const SizedBox(height: 14),
 
-          // Location card (matches your screenshot style)
-          _locationCard(context),
-
+          // _locationCard(context),
           const SizedBox(height: 18),
 
           Text(
@@ -331,7 +327,6 @@ class _SendInfoFormScreenState extends State<SendInfoFormScreen> {
 
           const SizedBox(height: 14),
 
-          // Voice note UI (still UI-only toggle)
           _voiceNoteSection(context),
 
           const SizedBox(height: 10),
@@ -422,103 +417,103 @@ class _SendInfoFormScreenState extends State<SendInfoFormScreen> {
     );
   }
 
-  Widget _locationCard(BuildContext context) {
-    final theme = Theme.of(context);
-    final c = theme.colorScheme;
+  // Widget _locationCard(BuildContext context) {
+  //   final theme = Theme.of(context);
+  //   final c = theme.colorScheme;
 
-    final title = _locationError != null
-        ? "Location Unavailable"
-        : (_loadingLocation ? "Detecting location..." : "Location Detected");
+  //   final title = _locationError != null
+  //       ? "Location Unavailable"
+  //       : (_loadingLocation ? "Detecting location..." : "Location Detected");
 
-    final subtitle =
-        _locationError ??
-        (_detectedAddress ??
-            ((_lat != null && _lng != null)
-                ? "Lat: ${_lat!.toStringAsFixed(6)}, Lng: ${_lng!.toStringAsFixed(6)}"
-                : "Not available"));
+  //   final subtitle =
+  //       _locationError ??
+  //       (_detectedAddress ??
+  //           ((_lat != null && _lng != null)
+  //               ? "Lat: ${_lat!.toStringAsFixed(6)}, Lng: ${_lng!.toStringAsFixed(6)}"
+  //               : "Not available"));
 
-    final shareHint = _shareLocation
-        ? "Automatically shared with responders"
-        : "Location not shared with responders";
+  //   final shareHint = _shareLocation
+  //       ? "Automatically shared with responders"
+  //       : "Location not shared with responders";
 
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: const Color(0xFFE8F5E9), 
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: c.outlineVariant),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.location_on, color: Colors.green),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      subtitle,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: c.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              IconButton(
-                tooltip: "Refresh",
-                onPressed: _loadingLocation ? null : _loadLocation,
-                icon: const Icon(Icons.refresh),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
+  //   return Container(
+  //     padding: const EdgeInsets.all(14),
+  //     decoration: BoxDecoration(
+  //       color: const Color(0xFFE8F5E9),
+  //       borderRadius: BorderRadius.circular(16),
+  //       border: Border.all(color: c.outlineVariant),
+  //     ),
+  //     child: Column(
+  //       crossAxisAlignment: CrossAxisAlignment.start,
+  //       children: [
+  //         Row(
+  //           children: [
+  //             const Icon(Icons.location_on, color: Colors.green),
+  //             const SizedBox(width: 10),
+  //             Expanded(
+  //               child: Column(
+  //                 crossAxisAlignment: CrossAxisAlignment.start,
+  //                 children: [
+  //                   Text(
+  //                     title,
+  //                     style: theme.textTheme.bodyMedium?.copyWith(
+  //                       fontWeight: FontWeight.w700,
+  //                     ),
+  //                   ),
+  //                   const SizedBox(height: 2),
+  //                   Text(
+  //                     subtitle,
+  //                     style: theme.textTheme.bodySmall?.copyWith(
+  //                       color: c.onSurfaceVariant,
+  //                     ),
+  //                   ),
+  //                 ],
+  //               ),
+  //             ),
+  //             IconButton(
+  //               tooltip: "Refresh",
+  //               onPressed: _loadingLocation ? null : _loadLocation,
+  //               icon: const Icon(Icons.refresh),
+  //             ),
+  //           ],
+  //         ),
+  //         const SizedBox(height: 10),
 
-          // "Edit location details" button (opens a small editor)
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton(
-              style: OutlinedButton.styleFrom(
-                foregroundColor: c.onSurface,
-                side: BorderSide(color: c.outlineVariant),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-              ),
-              onPressed: () => _editLocationDetails(context),
-              child: const Text(
-                "Edit location details (building, floor, etc.)",
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
+  //         // "Edit location details" button (opens a small editor)
+  //         SizedBox(
+  //           width: double.infinity,
+  //           child: OutlinedButton(
+  //             style: OutlinedButton.styleFrom(
+  //               foregroundColor: c.onSurface,
+  //               side: BorderSide(color: c.outlineVariant),
+  //               shape: RoundedRectangleBorder(
+  //                 borderRadius: BorderRadius.circular(14),
+  //               ),
+  //             ),
+  //             onPressed: () => _editLocationDetails(context),
+  //             child: const Text(
+  //               "Edit location details (building, floor, etc.)",
+  //             ),
+  //           ),
+  //         ),
+  //         const SizedBox(height: 8),
 
-          Row(
-            children: [
-              Icon(Icons.check, size: 16, color: c.onSurfaceVariant),
-              const SizedBox(width: 6),
-              Text(
-                shareHint,
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: c.onSurfaceVariant,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
+  //         Row(
+  //           children: [
+  //             Icon(Icons.check, size: 16, color: c.onSurfaceVariant),
+  //             const SizedBox(width: 6),
+  //             Text(
+  //               shareHint,
+  //               style: theme.textTheme.bodySmall?.copyWith(
+  //                 color: c.onSurfaceVariant,
+  //               ),
+  //             ),
+  //           ],
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   Future<void> _editLocationDetails(BuildContext context) async {
     final theme = Theme.of(context);
