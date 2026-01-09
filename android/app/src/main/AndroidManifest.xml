@@ -58,6 +58,22 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
 <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
 <uses-permission android:name="android.permission.INTERNET" />
+<uses-permission android:name="android.permission.RECORD_AUDIO"/>
+
+
+
+
+    <!-- Voice note (microphone) -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+
+    <!-- Camera (if you open camera to capture photo) -->
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <!-- Gallery / Photos (Android 13+). For older Android versions your plugin may handle this automatically,
+         but adding these is safe. -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+
+
 
 
 </manifest>
