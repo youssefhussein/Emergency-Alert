@@ -1,3 +1,4 @@
+import 'package:firebase_ai/firebase_ai.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -6,6 +7,9 @@ import 'screens/emergency/emergency_list_screen.dart';
 import 'package:emergency_alert/app_theme.dart';
 import 'package:emergency_alert/theme_controller.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:firebase_core/firebase_core.dart';
+
+import 'firebase_options.dart';
 
 late final ThemeController themeController;
 
@@ -20,7 +24,20 @@ Future<void> main() async {
     url: dotenv.get("SUPABASE_URL"),
     anonKey: dotenv.get("SUPABASE_KEY"),
   );
+  await Firebase.initializeApp(
 
+    options: DefaultFirebaseOptions.currentPlatform,
+
+);
+final model =
+      FirebaseAI.googleAI().generativeModel(model: 'gemini-2.5-flash');
+
+// Provide a prompt that contains text
+final prompt = [Content.text('Write a story about a magic backpack.')];
+
+// To generate text output, call generateContent with the text input
+final response = await model.generateContent(prompt);
+print(response.text);
   // runApp(const MainApp());
   runApp(const ProviderScope(child: MainApp()));
 }
