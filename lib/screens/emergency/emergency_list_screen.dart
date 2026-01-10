@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../main.dart'; // gives access to themeController
+// gives access to themeController
 
 import '../../services/emergency_service.dart';
+import '../../services/profile_service.dart';
 import '../../services/emergency_request_service.dart';
 import 'emergency_detail_screen.dart';
 import 'share_location_screen.dart';
-import 'emergency_contacts_screen.dart';
 import 'emergency_chat_screen.dart';
 import 'package:emergency_alert/screens/profile/contacts_screen.dart';
 import 'package:emergency_alert/screens/profile/profile_screen.dart';
@@ -21,7 +21,7 @@ class EmergencyListScreen extends StatelessWidget {
     final c = theme.colorScheme;
     return Scaffold(
       // backgroundColor: const Color(0xFFF5F7FB),
-      backgroundColor: c.background,
+      backgroundColor: c.surface,
 
       appBar: AppBar(
         // backgroundColor: Colors.white,
@@ -29,6 +29,12 @@ class EmergencyListScreen extends StatelessWidget {
         foregroundColor: c.onSurface,
         elevation: 0,
         titleSpacing: 0,
+        leading: Navigator.canPop(context)
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => Navigator.of(context).pop(),
+              )
+            : null,
         title: const Text(
           'Emergency Services',
           style: TextStyle(fontWeight: FontWeight.w600),
@@ -49,7 +55,30 @@ class EmergencyListScreen extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            const Text('Hello, fatima'),
+            FutureBuilder(
+              future: ProfileService(
+                Supabase.instance.client,
+              ).getCurrentUserProfile(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Text('Hello...');
+                }
+                final profile = snapshot.data;
+                final name =
+                    (profile != null &&
+                        profile.fullName != null &&
+                        profile.fullName!.trim().isNotEmpty)
+                    ? profile.fullName!.split(' ').first
+                    : 'there';
+                return Text(
+                  'Hello, $name',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w500,
+                  ),
+                );
+              },
+            ),
             const SizedBox(height: 12),
 
             // Red banner
@@ -77,7 +106,7 @@ class EmergencyListScreen extends StatelessWidget {
                   ),
                   SizedBox(height: 4),
                   Text(
-                    'Tap any service below to get immediate assistance',
+                    'Tap SOS below to get immediate assistance',
                     style: TextStyle(color: Colors.white),
                   ),
                 ],
@@ -86,46 +115,62 @@ class EmergencyListScreen extends StatelessWidget {
 
             const SizedBox(height: 16),
 
-            // 4 cards grid
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: emergencyServices.length,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-                childAspectRatio: 1.5,
+            // Single circular SOS card
+            Center(
+              child: GestureDetector(
+                onTap: () {
+                  final service = emergencyServices.first;
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => EmergencyDetailScreen(service: service),
+                    ),
+                  );
+                },
+                child: Container(
+                  width: 240,
+                  height: 240,
+                  decoration: BoxDecoration(
+                    gradient: RadialGradient(
+                      colors: [
+                        Colors.redAccent.shade700,
+                        Colors.redAccent,
+                        Colors.red.shade200,
+                      ],
+                      center: Alignment.center,
+                      radius: 0.95,
+                    ),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.redAccent.withOpacity(0.5),
+                        blurRadius: 40,
+                        spreadRadius: 8,
+                        offset: Offset(0, 16),
+                      ),
+                    ],
+                    border: Border.all(color: Colors.white, width: 6),
+                  ),
+                  child: Center(
+                    child: Text(
+                      'SOS',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 72,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 8,
+                        shadows: [
+                          Shadow(
+                            color: Colors.black38,
+                            blurRadius: 16,
+                            offset: Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
               ),
-              itemBuilder: (context, index) {
-                final service = emergencyServices[index];
-                return _EmergencyCard(
-                  service: service,
-                  onTap: () async {
-                    // 1) TEST: show snackbar so we know onTap works
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('${service.name} tapped'),
-                        duration: const Duration(seconds: 1),
-                      ),
-                    );
-
-                    // 2) OPTIONAL: send request to Supabase (comment while debugging)
-                    try {
-                      await requestService.sendRequest(service: service);
-                    } catch (e) {
-                      debugPrint('sendRequest error: $e');
-                    }
-
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => EmergencyDetailScreen(service: service),
-                      ),
-                    );
-                  },
-                );
-              },
             ),
 
             const SizedBox(height: 24),
