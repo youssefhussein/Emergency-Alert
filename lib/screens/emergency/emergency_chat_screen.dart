@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_ai/firebase_ai.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:intl/intl.dart';
 
 class EmergencyChatScreen extends StatefulWidget {
