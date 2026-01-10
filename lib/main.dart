@@ -24,20 +24,16 @@ Future<void> main() async {
     url: dotenv.get("SUPABASE_URL"),
     anonKey: dotenv.get("SUPABASE_KEY"),
   );
-  await Firebase.initializeApp(
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  // final model =
+  //       FirebaseAI.googleAI().generativeModel(model: 'gemini-2.5-flash');
 
-    options: DefaultFirebaseOptions.currentPlatform,
+  // // Provide a prompt that contains text
+  // final prompt = [Content.text('Write a story about a magic backpack.')];
 
-);
-final model =
-      FirebaseAI.googleAI().generativeModel(model: 'gemini-2.5-flash');
-
-// Provide a prompt that contains text
-final prompt = [Content.text('Write a story about a magic backpack.')];
-
-// To generate text output, call generateContent with the text input
-final response = await model.generateContent(prompt);
-print(response.text);
+  // To generate text output, call generateContent with the text input
+  // final response = await model.generateContent(prompt);
+  // print(response.text);
   // runApp(const MainApp());
   runApp(const ProviderScope(child: MainApp()));
 }

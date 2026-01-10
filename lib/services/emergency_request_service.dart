@@ -2,6 +2,8 @@ import 'dart:typed_data';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'emergency_service.dart';
+import 'package:flutter/foundation.dart';
+import 'package:firebase_ai/firebase_ai.dart';
 
 class EmergencyRequestService {
   final SupabaseClient _supabase;
@@ -103,6 +105,24 @@ class EmergencyRequestService {
     if (update.isNotEmpty) {
       await _supabase.from('emergencies').update(update).eq('id', emergencyId);
     }
+ 
+    // 4) Generate AI report
+    _generateAndSaveReport(
+      emergencyId: emergencyId,
+      userId: effectiveUserId,
+      emergencyType: service.type.name,
+      notes: description,
+      phone: phone,
+      shareLocation: shareLocation,
+      latitude: latitude,
+      longitude: longitude,
+      locationDetails: locationDetails,
+      photoPath: photoPath,
+      voicePath: voicePath,
+      voiceDurationSec: voiceDurationSec,
+    );
+
+    // final data = res.data;
 
     return emergencyId;
   }
@@ -111,6 +131,96 @@ class EmergencyRequestService {
     final e = (ext ?? '').trim().toLowerCase();
     if (e.isEmpty) return fallback;
     return e.startsWith('.') ? e.substring(1) : e;
+  }
+
+  Future<void> _generateAndSaveReport({
+    required int emergencyId,
+    required String userId,
+    required String emergencyType,
+    required String? notes,
+    required String? phone,
+    required bool shareLocation,
+    required double? latitude,
+    required double? longitude,
+    required String? locationDetails,
+    required String? photoPath,
+    required String? voicePath,
+    required int? voiceDurationSec,
+  }) async {
+    try {
+      // 1) Fetch user profile from Supabase (edit fields to match your table)
+      final profile = await _supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .single();
+
+      // 2) Gemini model via Firebase AI (same approach as your chatbot)
+      final model = FirebaseAI.googleAI().generativeModel(
+        model: 'gemini-2.5-flash-lite',
+        systemInstruction: Content.text(
+          "You are an emergency incident report writer. "
+          "Use ONLY the provided info. Do NOT invent facts. "
+          "If something is missing, write 'Unknown'. "
+          "Output plain text with headings:\n"
+          "Summary\nUser Info\nLocation\nDetails\nAttachments\nMissing Info\n",
+        ),
+        generationConfig: GenerationConfig(maxOutputTokens: 600),
+      );
+
+      // 3) Build prompt (profile + emergency info + attachment paths)
+      final prompt =
+          """
+Write an incident report.
+
+User Info (from database):
+- Full name: ${profile['full_name'] ?? 'Unknown'}
+- Phone: ${profile['phone'] ?? phone ?? 'Unknown'}
+- Blood type: ${profile['blood_type'] ?? 'Unknown'}
+- Allergies: ${profile['allergies'] ?? 'Unknown'}
+- Chronic conditions: ${profile['chronic_conditions'] ?? 'Unknown'}
+- Medications: ${profile['medications'] ?? 'Unknown'}
+- Other notes: ${profile['other_notes'] ?? profile['otherNotes'] ?? 'Unknown'}
+
+Emergency Request:
+- Emergency ID: $emergencyId
+- Type: $emergencyType
+- Notes: ${notes ?? 'Unknown'}
+- Share location: $shareLocation
+- Latitude: ${latitude ?? 'Unknown'}
+- Longitude: ${longitude ?? 'Unknown'}
+- Location details: ${locationDetails ?? 'Unknown'}
+
+Attachments (paths in Supabase Storage):
+- Photo path: ${photoPath ?? 'None'}
+- Voice path: ${voicePath ?? 'None'}
+- Voice duration (sec): ${voiceDurationSec ?? 'Unknown'}
+
+Rules:
+- Do not diagnose medically.
+- Do not guess unknown facts.
+- Include a "Missing Info" list for anything unclear.
+""";
+
+      // 4) Generate report text
+      final res = await model.generateContent([Content.text(prompt)]);
+      final reportText = (res.text ?? '').trim();
+
+      if (reportText.isEmpty) {
+        debugPrint("AI report empty for emergencyId=$emergencyId");
+        return;
+      }
+
+      // 5) Save report to Supabase
+      await _supabase
+          .from('emergencies')
+          .update({'report_by_ai': reportText})
+          .eq('id', emergencyId);
+
+      debugPrint("✅ AI report saved for emergencyId=$emergencyId");
+    } catch (e) {
+      debugPrint("❌ AI report generation failed: $e");
+    }
   }
 
   String _guessImageContentType(String ext) {
