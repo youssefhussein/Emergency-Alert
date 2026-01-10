@@ -34,9 +34,6 @@ class _ShareLocationScreenState extends State<ShareLocationScreen> {
       if (!mounted) return;
       setState(() {
         _position = pos;
-        if (pos == null) {
-          _error = 'Unable to get location. Check GPS and permissions.';
-        }
       });
     } catch (e) {
       if (!mounted) return;

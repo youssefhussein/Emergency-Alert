@@ -6,12 +6,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../services/emergency_service.dart';
 import '../../services/emergency_request_service.dart';
-import '../../services/geocoding_service.dart';
 import '../../services/location_service.dart';
 
 import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:path_provider/path_provider.dart';
@@ -35,7 +33,7 @@ class _SendInfoFormScreenState extends State<SendInfoFormScreen> {
   bool _shareLocation = true;
   bool _notifyTrustedContacts = false;
 
-  bool _hasVoiceNote = false;
+  final bool _hasVoiceNote = false;
 
   bool _sending = false;
 
@@ -63,6 +61,8 @@ class _SendInfoFormScreenState extends State<SendInfoFormScreen> {
   Timer? _recordTimer;
   DateTime? _recordStartAt;
   StreamSubscription<PlayerState>? _playerStateSub;
+
+  int _currentStep = 0;
 
   @override
   void initState() {
@@ -262,7 +262,7 @@ class _SendInfoFormScreenState extends State<SendInfoFormScreen> {
     final title = "${widget.service.name} Emergency";
 
     return Scaffold(
-      backgroundColor: c.background,
+      backgroundColor: c.surface,
       appBar: AppBar(
         backgroundColor: c.surface,
         foregroundColor: c.onSurface,
@@ -270,159 +270,179 @@ class _SendInfoFormScreenState extends State<SendInfoFormScreen> {
         title: Text(title),
         centerTitle: true,
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          Text(
-            "Provide emergency details",
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: c.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 14),
-
-          // _locationCard(context),
-          const SizedBox(height: 18),
-
-          Text(
-            "What's happening? (Optional)",
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 8),
-
-          TextField(
-            controller: _detailsCtrl,
-            maxLines: 4,
-            textInputAction: TextInputAction.newline,
-            decoration: InputDecoration(
-              hintText: "Brief description to help responders prepare...",
-              filled: true,
-              fillColor: c.surface,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-                borderSide: BorderSide(color: c.outlineVariant),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-                borderSide: BorderSide(color: c.outlineVariant),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-                borderSide: BorderSide(color: c.primary, width: 1.2),
-              ),
-              contentPadding: const EdgeInsets.all(14),
-            ),
-          ),
-
-          const SizedBox(height: 6),
-          Text(
-            "Keep it brief. AI will analyze and categorize automatically.",
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: c.onSurfaceVariant,
-            ),
-          ),
-
-          const SizedBox(height: 18),
-
-          Text(
-            "Add Photo (Optional)",
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 8),
-          _photoPicker(context),
-
-          const SizedBox(height: 14),
-
-          _voiceNoteSection(context),
-
-          const SizedBox(height: 10),
-          _toggleCard(
-            context,
-            icon: Icons.location_on_outlined,
-            title: "Share Location",
-            subtitle: "Help responders find you faster",
-            value: _shareLocation,
-            onChanged: (v) => setState(() => _shareLocation = v),
-          ),
-          const SizedBox(height: 10),
-          _toggleCard(
-            context,
-            icon: Icons.group_outlined,
-            title: "Notify Trusted Contacts",
-            subtitle: "Alert your emergency contacts",
-            value: _notifyTrustedContacts,
-            onChanged: (v) => setState(() => _notifyTrustedContacts = v),
-          ),
-
-          const SizedBox(height: 16),
-
-          Text(
-            "Contact phone (Optional)",
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 8),
-          TextField(
-            controller: _phoneCtrl,
-            keyboardType: TextInputType.phone,
-            decoration: InputDecoration(
-              hintText: "Your phone number",
-              filled: true,
-              fillColor: c.surface,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-                borderSide: BorderSide(color: c.outlineVariant),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-                borderSide: BorderSide(color: c.outlineVariant),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-                borderSide: BorderSide(color: c.primary, width: 1.2),
-              ),
-              contentPadding: const EdgeInsets.all(14),
-            ),
-          ),
-
-          const SizedBox(height: 16),
-          _aiDispatchInfo(context),
-
-          const SizedBox(height: 90),
-        ],
-      ),
-      bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
-          child: SizedBox(
-            height: 54,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFFF3B30),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+      body: Stepper(
+        currentStep: _currentStep,
+        onStepContinue: () {
+          if (_currentStep < 2) {
+            setState(() => _currentStep++);
+          }
+        },
+        onStepCancel: () {
+          if (_currentStep > 0) {
+            setState(() => _currentStep--);
+          }
+        },
+        onStepTapped: (step) => setState(() => _currentStep = step),
+        steps: [
+          Step(
+            title: Text("Emergency Details"),
+            subtitle: Text("Describe what's happening"),
+            content: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Provide emergency details",
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: c.onSurfaceVariant,
+                  ),
                 ),
-              ),
-              onPressed: _sending ? null : _submit,
-              child: _sending
-                  ? const SizedBox(
-                      width: 22,
-                      height: 22,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Text(
-                      "Request Emergency Help",
-                      style: TextStyle(fontWeight: FontWeight.w700),
+                const SizedBox(height: 14),
+                Text(
+                  "What's happening? (Optional)",
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: _detailsCtrl,
+                  maxLines: 4,
+                  textInputAction: TextInputAction.newline,
+                  decoration: InputDecoration(
+                    hintText: "Brief description to help responders prepare...",
+                    filled: true,
+                    fillColor: c.surface,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(color: c.outlineVariant),
                     ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(color: c.outlineVariant),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(color: c.primary, width: 1.2),
+                    ),
+                    contentPadding: const EdgeInsets.all(14),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  "Keep it brief. AI will analyze and categorize automatically.",
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: c.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 18),
+                Text(
+                  "Contact phone (Optional)",
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: _phoneCtrl,
+                  keyboardType: TextInputType.phone,
+                  decoration: InputDecoration(
+                    hintText: "Your phone number",
+                    filled: true,
+                    fillColor: c.surface,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(color: c.outlineVariant),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(color: c.outlineVariant),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(color: c.primary, width: 1.2),
+                    ),
+                    contentPadding: const EdgeInsets.all(14),
+                  ),
+                ),
+              ],
             ),
+            isActive: _currentStep >= 0,
           ),
-        ),
+          Step(
+            title: Text("Supporting Media"),
+            subtitle: Text("Add photo or voice note"),
+            content: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Add Photo (Optional)",
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                _photoPicker(context),
+                const SizedBox(height: 14),
+                _voiceNoteSection(context),
+              ],
+            ),
+            isActive: _currentStep >= 1,
+          ),
+          Step(
+            title: Text("Review & Send"),
+            subtitle: Text("Confirm options and submit"),
+            content: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _toggleCard(
+                  context,
+                  icon: Icons.location_on_outlined,
+                  title: "Share Location",
+                  subtitle: "Help responders find you faster",
+                  value: _shareLocation,
+                  onChanged: (v) => setState(() => _shareLocation = v),
+                ),
+                const SizedBox(height: 10),
+                _toggleCard(
+                  context,
+                  icon: Icons.group_outlined,
+                  title: "Notify Trusted Contacts",
+                  subtitle: "Alert your emergency contacts",
+                  value: _notifyTrustedContacts,
+                  onChanged: (v) => setState(() => _notifyTrustedContacts = v),
+                ),
+                const SizedBox(height: 16),
+                _aiDispatchInfo(context),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  height: 54,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFFF3B30),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    onPressed: _sending ? null : _submit,
+                    child: _sending
+                        ? const SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text(
+                            "Request Emergency Help",
+                            style: TextStyle(fontWeight: FontWeight.w700),
+                          ),
+                  ),
+                ),
+              ],
+            ),
+            isActive: _currentStep >= 2,
+          ),
+        ],
       ),
     );
   }
@@ -561,7 +581,7 @@ class _SendInfoFormScreenState extends State<SendInfoFormScreen> {
                 decoration: InputDecoration(
                   hintText: "Building / floor / apartment / landmark...",
                   filled: true,
-                  fillColor: c.background,
+                  fillColor: c.surface,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
                     borderSide: BorderSide(color: c.outlineVariant),

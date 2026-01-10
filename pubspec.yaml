@@ -9,6 +9,7 @@ environment:
 dependencies:
   audioplayers: ^6.5.1
   cached_network_image: ^3.4.1
+  dotted_border: ^3.1.0
   firebase_ai: ^3.6.1
   firebase_core: ^4.3.0
   flutter:
@@ -26,6 +27,11 @@ dependencies:
   shared_preferences: ^2.5.4
   supabase_flutter: ^2.10.3
   url_launcher: ^6.3.2
+  google_generative_ai: ^0.4.3 # Use the latest version # The official Gemini SDK
+
+  fast_contacts: ^5.0.1
+
+  intl: ^0.19.0 # For DateFormat
 
 dev_dependencies:
   flutter_test:
@@ -40,4 +46,4 @@ flutter:
     - .env
     # - .env.example
     # - .env.example
-    # - assets/
+    - assets/images/

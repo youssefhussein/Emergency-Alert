@@ -1,8 +1,9 @@
-
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../models/contact.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+import '../../models/contact.dart' as app_models;
 import '../../models/user_profile.dart';
 
 // import '../../models/contact_permissions.dart';
@@ -11,9 +12,8 @@ import '../../services/profile_service.dart';
 import '../../services/contact_permissions_service.dart';
 import 'package:emergency_alert/models/contact_permissions.dart';
 
-
 class ViewContactProfileScreen extends StatefulWidget {
-  final Contact contact;
+  final app_models.Contact contact;
   const ViewContactProfileScreen({super.key, required this.contact});
 
   @override
@@ -111,7 +111,7 @@ class _ViewContactProfileScreenState extends State<ViewContactProfileScreen> {
     );
   }
 
-  Widget _header(Contact c) {
+  Widget _header(app_models.Contact c) {
     return Container(
       color: Colors.white,
       padding: const EdgeInsets.only(bottom: 16),
@@ -143,7 +143,7 @@ class _ViewContactProfileScreenState extends State<ViewContactProfileScreen> {
 }
 
 class _DetailsTab extends StatelessWidget {
-  final Contact contact;
+  final app_models.Contact contact;
   final UserProfile? profile;
 
   const _DetailsTab({required this.contact, this.profile});
@@ -164,8 +164,26 @@ class _DetailsTab extends StatelessWidget {
           children: [
             Expanded(
               child: OutlinedButton.icon(
-                onPressed: () {
-                  // TODO: call via url_launcher
+                onPressed: () async {
+                  final phone = contact.phone;
+                  if (phone != null && phone.isNotEmpty) {
+                    final uri = Uri(scheme: 'tel', path: phone);
+                    if (await canLaunchUrl(uri)) {
+                      await launchUrl(uri);
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Could not launch phone app.'),
+                        ),
+                      );
+                    }
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('No phone number available.'),
+                      ),
+                    );
+                  }
                 },
                 icon: const Icon(Icons.call_rounded),
                 label: const Text('Call'),

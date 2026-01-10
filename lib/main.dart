@@ -8,6 +8,7 @@ import 'package:emergency_alert/app_theme.dart';
 import 'package:emergency_alert/theme_controller.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'screens/on-boarding.dart';
 
 import 'firebase_options.dart';
 
@@ -24,26 +25,45 @@ Future<void> main() async {
     url: dotenv.get("SUPABASE_URL"),
     anonKey: dotenv.get("SUPABASE_KEY"),
   );
-  await Firebase.initializeApp(
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  final model = FirebaseAI.googleAI().generativeModel(
+    model: 'gemini-2.5-flash',
+  );
 
-    options: DefaultFirebaseOptions.currentPlatform,
+  // Provide a prompt that contains text
+  final prompt = [Content.text('Write a story about a magic backpack.')];
 
-);
-final model =
-      FirebaseAI.googleAI().generativeModel(model: 'gemini-2.5-flash');
-
-// Provide a prompt that contains text
-final prompt = [Content.text('Write a story about a magic backpack.')];
-
-// To generate text output, call generateContent with the text input
-final response = await model.generateContent(prompt);
-print(response.text);
-  // runApp(const MainApp());
+  try {
+    // To generate text output, call generateContent with the text input
+    final response = await model.generateContent(prompt);
+    print(response.text);
+  } catch (e) {
+    // Handle Gemini API quota exceeded or other errors gracefully
+    debugPrint('Gemini API error: $e');
+    // Optionally, show a dialog or notification to the user if context is available
+  }
   runApp(const ProviderScope(child: MainApp()));
 }
 
-class MainApp extends StatelessWidget {
+class MainApp extends StatefulWidget {
   const MainApp({super.key});
+
+  @override
+  State<MainApp> createState() => _MainAppState();
+}
+
+class _MainAppState extends State<MainApp> {
+  bool _onboardingComplete = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // You can persist onboarding state with SharedPreferences if needed
+  }
+
+  void _finishOnboarding() {
+    setState(() => _onboardingComplete = true);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +75,9 @@ class MainApp extends StatelessWidget {
           theme: AppTheme.light(),
           darkTheme: AppTheme.dark(),
           themeMode: mode,
-          home: _getInitialScreen(),
+          home: _onboardingComplete
+              ? _getInitialScreen()
+              : OnboardingScreenWrapper(onFinish: _finishOnboarding),
         );
       },
     );
@@ -67,5 +89,32 @@ class MainApp extends StatelessWidget {
       return const EmergencyListScreen();
     }
     return const SignupScreen();
+  }
+}
+
+class OnboardingScreenWrapper extends StatelessWidget {
+  final VoidCallback onFinish;
+  const OnboardingScreenWrapper({required this.onFinish, super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return OnboardingScreenWithCallback(onFinish: onFinish);
+  }
+}
+
+class OnboardingScreenWithCallback extends StatefulWidget {
+  final VoidCallback onFinish;
+  const OnboardingScreenWithCallback({required this.onFinish, super.key});
+
+  @override
+  State<OnboardingScreenWithCallback> createState() =>
+      _OnboardingScreenWithCallbackState();
+}
+
+class _OnboardingScreenWithCallbackState
+    extends State<OnboardingScreenWithCallback> {
+  @override
+  Widget build(BuildContext context) {
+    return OnboardingScreen(onFinish: widget.onFinish);
   }
 }

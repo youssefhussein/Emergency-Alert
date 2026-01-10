@@ -2,6 +2,8 @@ import 'package:emergency_alert/screens/emergency/emergency_list_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'login.dart';
+import '../../services/profile_service.dart';
+import '../../models/user_profile.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -38,10 +40,21 @@ class _SignupScreenState extends State<SignupScreen> {
       _error = null;
     });
     try {
-      await Supabase.instance.client.auth.signUp(
+      final response = await Supabase.instance.client.auth.signUp(
         email: _emailController.text.trim(),
         password: _passwordController.text,
       );
+      final user = response.user;
+      if (user != null) {
+        // Save name and phone to profile table
+        final profileService = ProfileService(Supabase.instance.client);
+        final profile = UserProfile(
+          id: user.id,
+          fullName: _nameController.text.trim(),
+          phone: _phoneController.text.trim(),
+        );
+        await profileService.upsertCurrentUserProfile(profile);
+      }
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
