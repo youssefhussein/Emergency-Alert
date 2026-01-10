@@ -145,7 +145,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         _selectedStatus = profile.profileStatus ?? 'safe';
 
         _ageCtrl.text = profile.age?.toString() ?? '';
-        _selectedGender = profile.gender;
+        // Normalize gender value to allowed set
+        final gender = (profile.gender ?? '').toLowerCase();
+        if (['male', 'female', 'other'].contains(gender)) {
+          _selectedGender = gender;
+        } else {
+          _selectedGender = null;
+        }
         _weightCtrl.text = profile.weightKg?.toString() ?? '';
         _heightCtrl.text = profile.heightCm?.toString() ?? '';
 
@@ -432,67 +438,25 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 'Gender',
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _weightCtrl,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        labelText: 'Weight (kg)',
-                        border: OutlineInputBorder(),
-                      ),
-                      validator: (v) => _validateOptionalDouble(
-                        v,
-                        fieldName: 'Weight',
-                        min: 0,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: TextFormField(
-                      controller: _heightCtrl,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        labelText: 'Height (cm)',
-                        border: OutlineInputBorder(),
-                      ),
-                      validator: (v) => _validateOptionalDouble(
-                        v,
-                        fieldName: 'Height',
-                        min: 0,
-                      ),
-                    ),
-                  ),
+              const SizedBox(height: 8),
+              DropdownButtonFormField<String>(
+                initialValue: _selectedGender,
+                decoration: const InputDecoration(
+                  labelText: 'Select gender',
+                  border: OutlineInputBorder(),
+                ),
+                items: const [
+                  DropdownMenuItem(value: 'male', child: Text('Male')),
+                  DropdownMenuItem(value: 'female', child: Text('Female')),
+                  DropdownMenuItem(value: 'other', child: Text('Other')),
                 ],
-              ),
-              const SizedBox(height: 12),
-
-              Row(
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _weightCtrl,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        labelText: 'Weight (kg)',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: TextFormField(
-                      controller: _heightCtrl,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        labelText: 'Height (cm)',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                  ),
-                ],
+                onChanged: (value) {
+                  setState(() {
+                    _selectedGender = value;
+                  });
+                },
+                validator: (v) =>
+                    v == null || v.isEmpty ? 'Gender is required' : null,
               ),
               const SizedBox(height: 20),
 
@@ -524,7 +488,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               const SizedBox(height: 8),
 
               DropdownButtonFormField<String>(
-                value: _bloodTypeCtrl.text.isEmpty ? null : _bloodTypeCtrl.text,
+                initialValue: _bloodTypeCtrl.text.isEmpty ? null : _bloodTypeCtrl.text,
                 decoration: const InputDecoration(
                   labelText: 'Blood type',
                   border: OutlineInputBorder(),
