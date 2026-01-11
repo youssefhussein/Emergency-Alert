@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-
 import '../../services/emergency_service.dart';
 
 class EmergencyFollowUpScreen extends StatefulWidget {
@@ -27,7 +26,6 @@ class _EmergencyFollowUpScreenState extends State<EmergencyFollowUpScreen> {
   bool _loading = true;
   String? _error;
 
-  // Stream subscription for Supabase Realtime stream
   StreamSubscription<List<Map<String, dynamic>>>? _sub;
 
   @override
@@ -76,7 +74,6 @@ class _EmergencyFollowUpScreenState extends State<EmergencyFollowUpScreen> {
 
             setState(() {
               _row = rows.first;
-              // In case stream returns before _loadOnce finishes:
               if (_loading) _loading = false;
               _error = null;
             });
@@ -94,7 +91,7 @@ class _EmergencyFollowUpScreenState extends State<EmergencyFollowUpScreen> {
     super.dispose();
   }
 
-  //UI helpers
+  // ===== UI helpers =====
 
   String _statusLabel(String? status) {
     switch ((status ?? '').toLowerCase()) {
@@ -167,10 +164,21 @@ class _EmergencyFollowUpScreenState extends State<EmergencyFollowUpScreen> {
     }
   }
 
+  // ===== THEME MATCH: same feel as EmergencyAdditionalInfoScreen =====
+  // - Scaffold background uses theme.scaffoldBackgroundColor
+  // - Content wrapped in ONE main card with shadow
+  // - AppBar uses surface colors and back arrow only if canPop
+  // - Uses same spacing + rounded corners + outlineVariant borders
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final c = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
+    final scaffoldBg = theme.scaffoldBackgroundColor;
+    final cardColor = theme.cardColor;
+    final shadowColor = isDark ? Colors.black54 : Colors.black12;
 
     final status = _row?['status'] as String?;
     final createdAt = _row?['created_at']?.toString();
@@ -181,61 +189,165 @@ class _EmergencyFollowUpScreenState extends State<EmergencyFollowUpScreen> {
     final voiceUrl = _row?['voice_note_url'] as String?;
 
     return Scaffold(
+      backgroundColor: scaffoldBg,
       appBar: AppBar(
-        title: const Text('Emergency Follow-Up'),
+        backgroundColor: c.surface,
+        foregroundColor: c.onSurface,
+        elevation: 0,
         centerTitle: true,
+        title: const Text('Emergency Follow-Up'),
+        leading: Navigator.canPop(context)
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => Navigator.of(context).pop(),
+              )
+            : null,
       ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : _error != null
-          ? _errorState(context)
-          : ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                _headerCard(context, status: status, createdAt: createdAt),
-                const SizedBox(height: 12),
+      body: SafeArea(
+        child: _loading
+            ? const Center(child: CircularProgressIndicator())
+            : _error != null
+            ? _errorState(context)
+            : SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: cardColor,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: shadowColor,
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          // Header row (icon + title) like the other screen
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.track_changes_outlined,
+                                color: isDark
+                                    ? Colors.red[300]
+                                    : Colors.redAccent,
+                              ),
+                              const SizedBox(width: 8),
+                              const Text(
+                                'Live Status',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 18,
+                                ),
+                              ),
+                              const Spacer(),
+                              // small pill with case id
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: (isDark
+                                      ? Colors.grey[900]
+                                      : Colors.grey.shade100),
+                                  borderRadius: BorderRadius.circular(999),
+                                  border: Border.all(color: c.outlineVariant),
+                                ),
+                                child: Text(
+                                  'Case #${widget.emergencyId}',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: c.onSurfaceVariant,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
 
-                _timelineCard(context, status: status),
-                const SizedBox(height: 12),
+                          const SizedBox(height: 16),
 
-                _detailsCard(
-                  context,
-                  shareLocation: shareLocation ?? false,
-                  notifyContacts: notifyContacts ?? false,
-                  locationDetails: locationDetails,
+                          _headerCard(
+                            context,
+                            status: status,
+                            createdAt: createdAt,
+                          ),
+                          const SizedBox(height: 12),
+
+                          _timelineCard(context, status: status),
+                          const SizedBox(height: 12),
+
+                          _detailsCard(
+                            context,
+                            shareLocation: shareLocation ?? false,
+                            notifyContacts: notifyContacts ?? false,
+                            locationDetails: locationDetails,
+                          ),
+                          const SizedBox(height: 12),
+
+                          _mediaCard(
+                            context,
+                            photoUrl: photoUrl,
+                            voiceUrl: voiceUrl,
+                          ),
+                          const SizedBox(height: 14),
+
+                          _actionsRow(context),
+
+                          const SizedBox(height: 20),
+                          _safetyHint(context),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
-                const SizedBox(height: 12),
-
-                _mediaCard(context, photoUrl: photoUrl, voiceUrl: voiceUrl),
-                const SizedBox(height: 14),
-
-                _actionsRow(context),
-
-                const SizedBox(height: 20),
-                _safetyHint(context),
-              ],
-            ),
+              ),
+      ),
     );
   }
 
   Widget _errorState(BuildContext context) {
+    final theme = Theme.of(context);
+    final c = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.error_outline, size: 42),
-            const SizedBox(height: 10),
-            Text(
-              'Could not load this emergency.',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 8),
-            Text(_error!, textAlign: TextAlign.center),
-            const SizedBox(height: 12),
-            ElevatedButton(onPressed: _loadOnce, child: const Text('Retry')),
-          ],
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: theme.cardColor,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: c.outlineVariant),
+            boxShadow: [
+              BoxShadow(
+                color: isDark ? Colors.black54 : Colors.black12,
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.error_outline, size: 42),
+              const SizedBox(height: 10),
+              Text(
+                'Could not load this emergency.',
+                style: theme.textTheme.titleMedium,
+              ),
+              const SizedBox(height: 8),
+              Text(_error!, textAlign: TextAlign.center),
+              const SizedBox(height: 12),
+              ElevatedButton(onPressed: _loadOnce, child: const Text('Retry')),
+            ],
+          ),
         ),
       ),
     );
@@ -479,14 +591,7 @@ class _EmergencyFollowUpScreenState extends State<EmergencyFollowUpScreen> {
       children: [
         Expanded(
           child: OutlinedButton.icon(
-            onPressed: () {
-              // ScaffoldMessenger.of(context).showSnackBar(
-              //   SnackBar(
-              //     content: Text(
-              //     ),
-              //   ),
-              // );
-            },
+            onPressed: () {},
             icon: const Icon(Icons.call_outlined),
             label: const Text('Call'),
             style: OutlinedButton.styleFrom(

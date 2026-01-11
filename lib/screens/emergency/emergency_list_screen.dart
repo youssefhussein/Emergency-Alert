@@ -21,24 +21,29 @@ class EmergencyListScreen extends StatelessWidget {
     final theme = Theme.of(context);
     final c = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
-    final bannerColor = isDark ? Colors.red[900] : const Color(0xFFFF3B30);
-    final bannerTextColor = Colors.white;
-    final infoBoxColor = isDark ? Colors.green[900] : const Color(0xFFE8FFF0);
-    final actionTileColor = isDark
-        ? theme.colorScheme.surfaceContainerHighest
-        : Colors.white;
-    final actionTileForeground = isDark ? Colors.white : Colors.black87;
-    final sosBorderColor = isDark ? Colors.grey[300]! : Colors.white;
-    final sosShadowColor = isDark
-        ? Colors.redAccent.withOpacity(0.3)
-        : Colors.redAccent.withOpacity(0.5);
+
+    // ✅ SIMPLE modern theme tweaks (dark-mode safe)
+    final bannerColor = isDark ? c.errorContainer : c.error;
+    final bannerTextColor = isDark ? c.onErrorContainer : c.onError;
+
+    final infoBoxColor = isDark
+        ? c.tertiaryContainer.withOpacity(0.35)
+        : c.tertiaryContainer.withOpacity(0.55);
+    final infoBoxTextColor = c.onTertiaryContainer;
+
+    final actionTileColor = c.surfaceContainerHighest;
+    final actionTileForeground = c.onSurface;
+
+    final sosBorderColor = isDark ? c.outlineVariant : c.surface;
+    final sosShadowColor = c.error.withOpacity(isDark ? 0.28 : 0.42);
+
     return Scaffold(
       backgroundColor: c.surface,
       appBar: AppBar(
         backgroundColor: c.surface,
         foregroundColor: c.onSurface,
         elevation: 0,
-        titleSpacing: 0,
+        titleSpacing: 12, // ✅ a bit more “premium”
         leading: Navigator.canPop(context)
             ? IconButton(
                 icon: const Icon(Icons.arrow_back),
@@ -47,11 +52,16 @@ class EmergencyListScreen extends StatelessWidget {
             : null,
         title: const Text(
           'Emergency Services',
-          style: TextStyle(fontWeight: FontWeight.w600),
+          style: TextStyle(fontWeight: FontWeight.w800),
+        ),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(height: 1, color: c.outlineVariant.withOpacity(0.6)),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.person),
+            tooltip: 'Profile',
+            icon: const Icon(Icons.person_rounded),
             onPressed: () {
               Navigator.push(
                 context,
@@ -59,11 +69,12 @@ class EmergencyListScreen extends StatelessWidget {
               );
             },
           ),
+          const SizedBox(width: 6),
         ],
       ),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 22),
           children: [
             FutureBuilder(
               future: ProfileService(
@@ -71,7 +82,12 @@ class EmergencyListScreen extends StatelessWidget {
               ).getCurrentUserProfile(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Text('Hello...');
+                  return Text(
+                    'Hello...',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  );
                 }
                 final profile = snapshot.data;
                 final name =
@@ -82,42 +98,46 @@ class EmergencyListScreen extends StatelessWidget {
                     : 'there';
                 return Text(
                   'Hello, $name',
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w500,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
                   ),
                 );
               },
             ),
             const SizedBox(height: 12),
 
-            // Red banner
+            // ✅ Banner: softer in dark mode + modern radius + subtle border
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: bannerColor,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: isDark
+                      ? c.error.withOpacity(0.35)
+                      : Colors.transparent,
+                ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.error_outline, color: bannerTextColor),
+                      Icon(Icons.error_outline_rounded, color: bannerTextColor),
                       const SizedBox(width: 8),
                       Text(
                         'Quick Emergency Access',
                         style: TextStyle(
                           color: bannerTextColor,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w900,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 6),
                   Text(
                     'Tap SOS below to get immediate assistance',
-                    style: TextStyle(color: bannerTextColor),
+                    style: TextStyle(color: bannerTextColor.withOpacity(0.95)),
                   ),
                 ],
               ),
@@ -125,7 +145,7 @@ class EmergencyListScreen extends StatelessWidget {
 
             const SizedBox(height: 16),
 
-            // Single circular SOS card
+            // ✅ SOS: keep your look, but more “alive” with a ring + cleaner gradient
             Center(
               child: GestureDetector(
                 onTap: () {
@@ -141,47 +161,59 @@ class EmergencyListScreen extends StatelessWidget {
                   width: 240,
                   height: 240,
                   decoration: BoxDecoration(
-                    gradient: RadialGradient(
-                      colors: isDark
-                          ? [
-                              Colors.red[900]!,
-                              Colors.redAccent.shade700,
-                              Colors.redAccent,
-                            ]
-                          : [
-                              Colors.redAccent.shade700,
-                              Colors.redAccent,
-                              Colors.red.shade200,
-                            ],
-                      center: Alignment.center,
-                      radius: 0.95,
-                    ),
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
                         color: sosShadowColor,
                         blurRadius: 40,
                         spreadRadius: 8,
-                        offset: Offset(0, 16),
+                        offset: const Offset(0, 16),
                       ),
                     ],
-                    border: Border.all(color: sosBorderColor, width: 6),
                   ),
-                  child: Center(
-                    child: Text(
-                      'SOS',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 72,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 8,
-                        shadows: [
-                          Shadow(
-                            color: Colors.black38,
-                            blurRadius: 16,
-                            offset: Offset(0, 4),
+                  child: Container(
+                    padding: const EdgeInsets.all(5), // ✅ outer ring
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: c.surfaceContainerHighest,
+                      border: Border.all(color: sosBorderColor, width: 0.8),
+                    ),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: RadialGradient(
+                          colors: isDark
+                              ? [
+                                  c.errorContainer,
+                                  c.error.withOpacity(0.95),
+                                  c.error,
+                                ]
+                              : [
+                                  Colors.redAccent.shade700,
+                                  const Color.fromARGB(255, 177, 18, 18),
+                                  Colors.red.shade200,
+                                ],
+                          center: Alignment.center,
+                          radius: 0.95,
+                        ),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: Text(
+                          'SOS',
+                          style: TextStyle(
+                            color: const Color.fromARGB(255, 255, 255, 255),
+                            fontSize: 72,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 8,
+                            shadows: const [
+                              Shadow(
+                                color: Colors.black38,
+                                blurRadius: 16,
+                                offset: Offset(0, 4),
+                              ),
+                            ],
                           ),
-                        ],
+                        ),
                       ),
                     ),
                   ),
@@ -191,11 +223,13 @@ class EmergencyListScreen extends StatelessWidget {
 
             const SizedBox(height: 24),
 
-            const Text(
+            Text(
               'Quick Actions',
-              style: TextStyle(fontWeight: FontWeight.w600),
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w800,
+              ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 10),
 
             _actionTile(
               context,
@@ -213,7 +247,7 @@ class EmergencyListScreen extends StatelessWidget {
                 );
               },
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 10),
             _actionTile(
               context,
               icon: Icons.phone_in_talk_rounded,
@@ -228,13 +262,13 @@ class EmergencyListScreen extends StatelessWidget {
                 );
               },
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 10),
             _actionTile(
               context,
               icon: Icons.headset_mic_rounded,
               title: 'Want assist?',
               subtitle: 'Chat with us to find the right support',
-              color: isDark ? const Color(0xFF8B5CFF) : const Color(0xFF8B5CFF),
+              color: const Color(0xFF8B5CFF),
               foreground: Colors.white,
               onTap: () {
                 Navigator.push(
@@ -248,17 +282,32 @@ class EmergencyListScreen extends StatelessWidget {
 
             const SizedBox(height: 16),
 
+            // ✅ Info box: no hardcoded green, adapts to dark mode
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: infoBoxColor,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: c.outlineVariant.withOpacity(0.6)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Text('✓ Help is available 24/7'),
-                  Text("✓ Take a deep breath – you're safe"),
+                children: [
+                  Text(
+                    '✓ Help is available 24/7',
+                    style: TextStyle(
+                      color: infoBoxTextColor,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    "✓ Take a deep breath – you're safe",
+                    style: TextStyle(
+                      color: infoBoxTextColor.withOpacity(0.95),
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -277,18 +326,32 @@ class EmergencyListScreen extends StatelessWidget {
     Color color = Colors.white,
     Color foreground = Colors.black87,
   }) {
+    final theme = Theme.of(context);
+    final c = theme.colorScheme;
+
     return Material(
       color: color,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(18), // ✅ slightly more modern
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
+        borderRadius: BorderRadius.circular(18),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: c.outlineVariant.withOpacity(0.6),
+            ), // ✅ subtle border
+          ),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           child: Row(
             children: [
-              CircleAvatar(
-                backgroundColor: foreground.withOpacity(0.08),
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: foreground.withOpacity(0.10),
+                  borderRadius: BorderRadius.circular(14),
+                ),
                 child: Icon(icon, color: foreground),
               ),
               const SizedBox(width: 12),
@@ -300,21 +363,22 @@ class EmergencyListScreen extends StatelessWidget {
                       title,
                       style: TextStyle(
                         color: foreground,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       subtitle,
                       style: TextStyle(
-                        color: foreground.withOpacity(0.8),
+                        color: foreground.withOpacity(0.80),
                         fontSize: 12,
+                        height: 1.25,
                       ),
                     ),
                   ],
                 ),
               ),
-              Icon(Icons.chevron_right, color: foreground),
+              Icon(Icons.chevron_right_rounded, color: foreground),
             ],
           ),
         ),

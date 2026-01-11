@@ -70,7 +70,6 @@ const emergencyServices = <EmergencyService>[
     availableServices: [
       'Fire Response',
       'Rescue Operations',
-      'Hazmat',
       'Emergency Medical',
     ],
   ),
@@ -84,10 +83,10 @@ const emergencyServices = <EmergencyService>[
     reassuranceText:
         'A tow truck is on its way to you. Stay calm and wait for the truck to arrive.',
     availableServices: [
+      'Car accident',
       'Tow Truck',
       'Roadside Assistance',
       'Car Lockout',
-      'Flat Tire Change',
     ],
   ),
 ];

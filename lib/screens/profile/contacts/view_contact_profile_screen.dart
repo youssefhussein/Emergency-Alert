@@ -99,28 +99,61 @@ class _ViewContactProfileScreenState extends State<ViewContactProfileScreen> {
 
     final linked = widget.contact.contactUserId != null;
 
+    // Emergency accent (SOS red) consistent with other screens.
+    final emergencyAccent = cs.error;
+
     return DefaultTabController(
       length: linked ? 2 : 1,
       child: Scaffold(
         backgroundColor: cs.surface,
         appBar: AppBar(
+          elevation: 0,
+          centerTitle: false,
           backgroundColor: cs.surface,
           foregroundColor: cs.onSurface,
-          title: const Text('Contact Profile'),
-          bottom: TabBar(
-            tabs: [
-              const Tab(text: 'Details'),
-              if (linked) const Tab(text: 'Medical'),
-            ],
+          titleSpacing: 12,
+          title: const Text(
+            'Contact Profile',
+            style: TextStyle(fontWeight: FontWeight.w800),
           ),
+          bottom: PreferredSize(
+            preferredSize: Size.fromHeight((linked ? 48 : 0) + 1),
+            child: Column(
+              children: [
+                if (linked)
+                  TabBar(
+                    indicatorColor: emergencyAccent,
+                    labelColor: cs.onSurface,
+                    unselectedLabelColor: cs.onSurfaceVariant,
+                    labelStyle: const TextStyle(fontWeight: FontWeight.w800),
+                    tabs: const [
+                      Tab(text: 'Details'),
+                      Tab(text: 'Medical'),
+                    ],
+                  ),
+                Container(height: 1, color: cs.outlineVariant.withOpacity(0.7)),
+              ],
+            ),
+          ),
+          actions: [
+            IconButton(
+              tooltip: 'Refresh',
+              onPressed: _loading ? null : _load,
+              icon: const Icon(Icons.refresh_rounded),
+            ),
+            const SizedBox(width: 6),
+          ],
         ),
         body: Column(
           children: [
             _Header(contact: widget.contact),
             Expanded(
               child: _loading
-                  ? const Center(child: CircularProgressIndicator())
+                  ? Center(
+                      child: CircularProgressIndicator(color: emergencyAccent),
+                    )
                   : TabBarView(
+                      physics: const BouncingScrollPhysics(),
                       children: [
                         _DetailsTab(
                           contact: widget.contact,
@@ -147,28 +180,48 @@ class _Header extends StatelessWidget {
   final app_models.Contact contact;
   const _Header({required this.contact});
 
+  Color _statusColor(ColorScheme cs, String status) {
+    final s = status.trim().toLowerCase();
+    if (s == 'accepted' || s == 'active') return cs.primary;
+    if (s == 'pending') return cs.tertiary;
+    if (s == 'blocked' || s == 'rejected') return cs.error;
+    return cs.outline;
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
+
+    final statusColor = _statusColor(cs, contact.status);
+
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
       decoration: BoxDecoration(
         color: cs.surface,
-        border: Border(bottom: BorderSide(color: cs.outlineVariant)),
+        border: Border(
+          bottom: BorderSide(color: cs.outlineVariant.withOpacity(0.8)),
+        ),
       ),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 24,
-            backgroundColor: cs.primary.withOpacity(0.12),
-            child: Text(
-              contact.name.isNotEmpty ? contact.name[0].toUpperCase() : '?',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-                color: cs.primary,
+          Container(
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(
+              color: cs.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: cs.outlineVariant),
+            ),
+            child: Center(
+              child: Text(
+                contact.name.isNotEmpty ? contact.name[0].toUpperCase() : '?',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
+                  color: cs.onSurface,
+                ),
               ),
             ),
           ),
@@ -180,14 +233,16 @@ class _Header extends StatelessWidget {
                 Text(
                   contact.name,
                   style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w900,
+                    color: cs.onSurface,
                   ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 3),
                 Text(
                   contact.relation ?? 'Emergency contact',
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: cs.onSurface.withOpacity(0.7),
+                    color: cs.onSurfaceVariant,
+                    height: 1.25,
                   ),
                 ),
               ],
@@ -197,14 +252,15 @@ class _Header extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
-                color: cs.surfaceContainerHighest,
+                color: statusColor.withOpacity(0.10),
                 borderRadius: BorderRadius.circular(999),
-                border: Border.all(color: cs.outlineVariant),
+                border: Border.all(color: statusColor.withOpacity(0.55)),
               ),
               child: Text(
                 contact.status,
                 style: theme.textTheme.labelSmall?.copyWith(
-                  fontWeight: FontWeight.w800,
+                  fontWeight: FontWeight.w900,
+                  color: statusColor,
                 ),
               ),
             ),
@@ -232,14 +288,41 @@ class _DetailsTab extends StatelessWidget {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
 
+    // Emergency accent (SOS red)
+    final emergencyAccent = cs.error;
+    final onEmergencyAccent = cs.onError;
+
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 22),
       children: [
-        if (error != null)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: Text(error!, style: TextStyle(color: cs.error)),
+        if (error != null) ...[
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: cs.errorContainer.withOpacity(0.55),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: cs.error.withOpacity(0.6)),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.error_outline_rounded, color: cs.error),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    error!,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: cs.onErrorContainer,
+                      height: 1.3,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
+          const SizedBox(height: 12),
+        ],
 
         _sectionTitle(theme, 'Contact info'),
         _infoTile(
@@ -268,10 +351,12 @@ class _DetailsTab extends StatelessWidget {
         const SizedBox(height: 16),
         _sectionTitle(theme, 'Profile access'),
         Card(
+          margin: const EdgeInsets.only(bottom: 12), // ✅ spacing
           elevation: 0,
           color: cs.surfaceContainerHighest,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(22),
+            side: BorderSide(color: cs.outlineVariant),
           ),
           child: Padding(
             padding: const EdgeInsets.all(14),
@@ -280,7 +365,10 @@ class _DetailsTab extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.verified_user_outlined, color: cs.primary),
+                    Icon(
+                      Icons.verified_user_outlined,
+                      color: canViewBasic ? cs.primary : cs.outline,
+                    ),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
@@ -289,7 +377,11 @@ class _DetailsTab extends StatelessWidget {
                             : (canViewBasic
                                   ? 'You can view limited profile details.'
                                   : 'You do not have permission to view profile details.'),
-                        style: theme.textTheme.bodyMedium,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: cs.onSurface,
+                          height: 1.25,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ],
@@ -308,16 +400,26 @@ class _DetailsTab extends StatelessWidget {
           ),
         ),
 
-        const SizedBox(height: 16),
+        const SizedBox(height: 4),
         Row(
           children: [
             Expanded(
               child: OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  side: BorderSide(color: cs.outlineVariant),
+                  foregroundColor: cs.onSurface,
+                ),
                 onPressed: () async {
                   final phone = contact.phone;
                   if (phone == null || phone.trim().isEmpty) {
+                    ScaffoldMessenger.of(context).clearSnackBars();
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
+                        behavior: SnackBarBehavior.floating,
                         content: Text('No phone number available.'),
                       ),
                     );
@@ -328,29 +430,47 @@ class _DetailsTab extends StatelessWidget {
                   if (await canLaunchUrl(uri)) {
                     await launchUrl(uri);
                   } else {
+                    ScaffoldMessenger.of(context).clearSnackBars();
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
+                        behavior: SnackBarBehavior.floating,
                         content: Text('Could not launch phone app.'),
                       ),
                     );
                   }
                 },
                 icon: const Icon(Icons.call_rounded),
-                label: const Text('Call'),
+                label: const Text(
+                  'Call',
+                  style: TextStyle(fontWeight: FontWeight.w800),
+                ),
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: FilledButton.icon(
+                style: FilledButton.styleFrom(
+                  backgroundColor: emergencyAccent,
+                  foregroundColor: onEmergencyAccent,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
                 onPressed: () {
+                  ScaffoldMessenger.of(context).clearSnackBars();
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
+                      behavior: SnackBarBehavior.floating,
                       content: Text('Chat will be connected later.'),
                     ),
                   );
                 },
                 icon: const Icon(Icons.chat_bubble_outline),
-                label: const Text('Chat'),
+                label: const Text(
+                  'Chat',
+                  style: TextStyle(fontWeight: FontWeight.w800),
+                ),
               ),
             ),
           ],
@@ -365,13 +485,14 @@ class _DetailsTab extends StatelessWidget {
       child: Text(
         text,
         style: theme.textTheme.titleSmall?.copyWith(
-          fontWeight: FontWeight.w800,
+          fontWeight: FontWeight.w900,
         ),
       ),
     );
   }
 
   Widget _infoLine(ThemeData theme, String label, String value) {
+    final cs = theme.colorScheme;
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
       child: Row(
@@ -380,8 +501,8 @@ class _DetailsTab extends StatelessWidget {
             child: Text(
               label,
               style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurface.withOpacity(0.7),
-                fontWeight: FontWeight.w700,
+                color: cs.onSurfaceVariant,
+                fontWeight: FontWeight.w800,
               ),
             ),
           ),
@@ -390,6 +511,7 @@ class _DetailsTab extends StatelessWidget {
               value,
               style: theme.textTheme.bodySmall?.copyWith(
                 fontWeight: FontWeight.w700,
+                color: cs.onSurface,
               ),
             ),
           ),
@@ -407,18 +529,27 @@ class _DetailsTab extends StatelessWidget {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
     return Card(
+      margin: const EdgeInsets.only(bottom: 12), // ✅ spacing between rectangles
       elevation: 0,
       color: cs.surfaceContainerHighest,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(22),
+        side: BorderSide(color: cs.outlineVariant),
+      ),
       child: ListTile(
         leading: Icon(icon, color: cs.primary),
         title: Text(
           title,
           style: theme.textTheme.bodyMedium?.copyWith(
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w900,
           ),
         ),
-        subtitle: Text(value),
+        subtitle: Text(
+          value,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: cs.onSurfaceVariant,
+          ),
+        ),
       ),
     );
   }
@@ -437,13 +568,15 @@ class _MedicalTab extends StatelessWidget {
 
     if (profile == null) {
       return ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 22),
         children: [
           Card(
+            margin: const EdgeInsets.only(bottom: 12), // ✅ spacing
             elevation: 0,
             color: cs.surfaceContainerHighest,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(22),
+              side: BorderSide(color: cs.outlineVariant),
             ),
             child: const Padding(
               padding: EdgeInsets.all(16),
@@ -456,24 +589,30 @@ class _MedicalTab extends StatelessWidget {
 
     if (!canViewMedical) {
       return ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 22),
         children: [
           Card(
+            margin: const EdgeInsets.only(bottom: 12), // ✅ spacing
             elevation: 0,
             color: cs.surfaceContainerHighest,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(22),
+              side: BorderSide(color: cs.outlineVariant),
             ),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
-                  Icon(Icons.lock_outline, color: cs.primary),
+                  Icon(Icons.lock_outline, color: cs.error),
                   const SizedBox(width: 10),
-                  const Expanded(
+                  Expanded(
                     child: Text(
                       'You do not have permission to view medical information.',
-                      textAlign: TextAlign.left,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: cs.onSurface,
+                        fontWeight: FontWeight.w700,
+                        height: 1.25,
+                      ),
                     ),
                   ),
                 ],
@@ -486,7 +625,7 @@ class _MedicalTab extends StatelessWidget {
 
     final p = profile!;
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 22),
       children: [
         _medicalTile(
           context,
@@ -543,18 +682,27 @@ class _MedicalTab extends StatelessWidget {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
     return Card(
+      margin: const EdgeInsets.only(bottom: 12), // ✅ spacing between rectangles
       elevation: 0,
       color: cs.surfaceContainerHighest,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(22),
+        side: BorderSide(color: cs.outlineVariant),
+      ),
       child: ListTile(
         leading: Icon(icon, color: cs.primary),
         title: Text(
           label,
           style: theme.textTheme.bodyMedium?.copyWith(
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w900,
           ),
         ),
-        subtitle: Text(value),
+        subtitle: Text(
+          value,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: cs.onSurfaceVariant,
+          ),
+        ),
       ),
     );
   }
