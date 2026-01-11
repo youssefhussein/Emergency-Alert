@@ -6,7 +6,7 @@ import '../../../widgets/profile/contact_card_tile.dart';
 import 'add_contact_screen.dart';
 import 'contacts_provider.dart';
 import 'contacts_state.dart';
-import '../view_contact_profile_screen.dart';
+import 'view_contact_profile_screen.dart';
 
 class ContactsScreen extends ConsumerStatefulWidget {
   const ContactsScreen({super.key});
