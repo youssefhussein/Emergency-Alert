@@ -63,7 +63,7 @@ class _SignupScreenState extends State<SignupScreen> {
           ),
         ),
       );
-      Navigator.push(
+      Navigator.pushReplacement(
         context,
         MaterialPageRoute<void>(
           builder: (context) => const EmergencyListScreen(),
@@ -280,7 +280,7 @@ class _SignupScreenState extends State<SignupScreen> {
                       ),
                       GestureDetector(
                         onTap: () {
-                          Navigator.push(
+                          Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
                               builder: (context) => LoginScreen(),
