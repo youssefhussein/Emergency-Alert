@@ -99,8 +99,9 @@ class EmergencyRequestService {
     if (photoPath != null) update['photo_url'] = photoPath;
 
     if (voicePath != null) update['voice_note_url'] = voicePath;
-    if (voiceDurationSec != null)
+    if (voiceDurationSec != null) {
       update['voice_note_duration_sec'] = voiceDurationSec;
+    }
 
     if (update.isNotEmpty) {
       await _supabase.from('emergencies').update(update).eq('id', emergencyId);

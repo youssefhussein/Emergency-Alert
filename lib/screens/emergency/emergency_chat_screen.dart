@@ -118,15 +118,35 @@ class _EmergencyChatScreenState extends State<EmergencyChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final bgColor = theme.scaffoldBackgroundColor;
+    final chatBannerColor = isDark
+        ? Colors.blueGrey[900]
+        : const Color(0xFFE8F2FF);
+    final chatBannerText = isDark ? Colors.white70 : Colors.black87;
+    final inputBg = isDark ? Colors.grey[900] : Colors.white;
+    final inputBorder = isDark ? Colors.grey[700]! : Colors.grey[300]!;
+    final chipBg = (isDark ? Colors.blueGrey[800] : Colors.grey[200])!;
+    final chipText = (isDark ? Colors.white : Colors.black87);
     return Scaffold(
-      appBar: AppBar(title: const Text('Emergency Support')),
+      backgroundColor: bgColor,
+      appBar: AppBar(
+        title: const Text('Emergency Support'),
+        backgroundColor: theme.appBarTheme.backgroundColor ?? bgColor,
+        foregroundColor: theme.appBarTheme.foregroundColor,
+        elevation: 0.5,
+      ),
       body: Column(
         children: [
           Container(
             width: double.infinity,
-            color: const Color(0xFFE8F2FF),
+            color: chatBannerColor,
             padding: const EdgeInsets.all(12),
-            child: const Text("Take your time. We're here to listen and help."),
+            child: Text(
+              "Take your time. We're here to listen and help.",
+              style: TextStyle(color: chatBannerText),
+            ),
           ),
           Expanded(
             child: ListView.builder(
@@ -134,22 +154,26 @@ class _EmergencyChatScreenState extends State<EmergencyChatScreen> {
               padding: const EdgeInsets.all(16),
               itemCount: _messages.length,
               itemBuilder: (context, index) =>
-                  _ChatBubble(message: _messages[index]),
+                  _ChatBubble(message: _messages[index], isDark: isDark),
             ),
           ),
           if (_isLoading)
-            const Padding(
-              padding: EdgeInsets.all(8.0),
-              child: LinearProgressIndicator(minHeight: 2),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: LinearProgressIndicator(
+                minHeight: 2,
+                color: isDark ? Colors.blue[200] : null,
+                backgroundColor: isDark ? Colors.blueGrey[900] : null,
+              ),
             ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8),
             child: Wrap(
               spacing: 6,
               children: [
-                _chip('Not sure what I need'),
-                _chip('Medical help'),
-                _chip('Police'),
+                _chip('Not sure what I need', chipBg, chipText),
+                _chip('Medical help', chipBg, chipText),
+                _chip('Police', chipBg, chipText),
               ],
             ),
           ),
@@ -160,15 +184,36 @@ class _EmergencyChatScreenState extends State<EmergencyChatScreen> {
                 Expanded(
                   child: TextField(
                     controller: _controller,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       hintText: 'Type your message...',
-                      border: OutlineInputBorder(),
+                      filled: true,
+                      fillColor: inputBg,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: inputBorder),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: inputBorder),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(
+                          color: theme.colorScheme.primary,
+                        ),
+                      ),
+                    ),
+                    style: TextStyle(
+                      color: isDark ? Colors.white : Colors.black87,
                     ),
                     onSubmitted: _send,
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.send_rounded, color: Colors.blue),
+                  icon: Icon(
+                    Icons.send_rounded,
+                    color: theme.colorScheme.primary,
+                  ),
                   onPressed: () => _send(_controller.text),
                 ),
               ],
@@ -179,9 +224,10 @@ class _EmergencyChatScreenState extends State<EmergencyChatScreen> {
     );
   }
 
-  Widget _chip(String label) {
+  Widget _chip(String label, Color bg, Color fg) {
     return ActionChip(
-      label: Text(label, style: const TextStyle(fontSize: 12)),
+      backgroundColor: bg,
+      label: Text(label, style: TextStyle(fontSize: 12, color: fg)),
       onPressed: () => _send(label),
     );
   }
@@ -189,15 +235,21 @@ class _EmergencyChatScreenState extends State<EmergencyChatScreen> {
 
 class _ChatBubble extends StatelessWidget {
   final _Message message;
-  const _ChatBubble({required this.message});
+  final bool isDark;
+  const _ChatBubble({required this.message, required this.isDark});
 
   @override
   Widget build(BuildContext context) {
     final align = message.fromMe
         ? CrossAxisAlignment.end
         : CrossAxisAlignment.start;
-    final bg = message.fromMe ? const Color(0xFF2962FF) : Colors.grey[200];
-    final fg = message.fromMe ? Colors.white : Colors.black87;
+    final bg = message.fromMe
+        ? (isDark ? const Color(0xFF1976D2) : const Color(0xFF2962FF))
+        : (isDark ? Colors.blueGrey[800] : Colors.grey[200]);
+    final fg = message.fromMe
+        ? Colors.white
+        : (isDark ? Colors.white70 : Colors.black87);
+    final timeColor = isDark ? Colors.grey[400] : Colors.grey;
 
     return Column(
       crossAxisAlignment: align,
@@ -219,10 +271,7 @@ class _ChatBubble extends StatelessWidget {
           ),
           child: Text(message.text, style: TextStyle(color: fg)),
         ),
-        Text(
-          message.time,
-          style: const TextStyle(fontSize: 10, color: Colors.grey),
-        ),
+        Text(message.time, style: TextStyle(fontSize: 10, color: timeColor)),
       ],
     );
   }

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../main.dart'; // gives access to themeController
+// gives access to themeController
 
 class EmergencyContactsScreen extends StatelessWidget {
   const EmergencyContactsScreen({super.key});

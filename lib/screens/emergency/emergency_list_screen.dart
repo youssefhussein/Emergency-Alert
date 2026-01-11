@@ -19,12 +19,21 @@ class EmergencyListScreen extends StatelessWidget {
     final requestService = EmergencyRequestService(Supabase.instance.client);
     final theme = Theme.of(context);
     final c = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+    final bannerColor = isDark ? Colors.red[900] : const Color(0xFFFF3B30);
+    final bannerTextColor = Colors.white;
+    final infoBoxColor = isDark ? Colors.green[900] : const Color(0xFFE8FFF0);
+    final actionTileColor = isDark
+        ? theme.colorScheme.surfaceContainerHighest
+        : Colors.white;
+    final actionTileForeground = isDark ? Colors.white : Colors.black87;
+    final sosBorderColor = isDark ? Colors.grey[300]! : Colors.white;
+    final sosShadowColor = isDark
+        ? Colors.redAccent.withOpacity(0.3)
+        : Colors.redAccent.withOpacity(0.5);
     return Scaffold(
-      // backgroundColor: const Color(0xFFF5F7FB),
       backgroundColor: c.surface,
-
       appBar: AppBar(
-        // backgroundColor: Colors.white,
         backgroundColor: c.surface,
         foregroundColor: c.onSurface,
         elevation: 0,
@@ -85,29 +94,29 @@ class EmergencyListScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: const Color(0xFFFF3B30),
+                color: bannerColor,
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: const Column(
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.error_outline, color: Colors.white),
-                      SizedBox(width: 8),
+                      Icon(Icons.error_outline, color: bannerTextColor),
+                      const SizedBox(width: 8),
                       Text(
                         'Quick Emergency Access',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: bannerTextColor,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                     ],
                   ),
-                  SizedBox(height: 4),
+                  const SizedBox(height: 4),
                   Text(
                     'Tap SOS below to get immediate assistance',
-                    style: TextStyle(color: Colors.white),
+                    style: TextStyle(color: bannerTextColor),
                   ),
                 ],
               ),
@@ -132,24 +141,30 @@ class EmergencyListScreen extends StatelessWidget {
                   height: 240,
                   decoration: BoxDecoration(
                     gradient: RadialGradient(
-                      colors: [
-                        Colors.redAccent.shade700,
-                        Colors.redAccent,
-                        Colors.red.shade200,
-                      ],
+                      colors: isDark
+                          ? [
+                              Colors.red[900]!,
+                              Colors.redAccent.shade700,
+                              Colors.redAccent,
+                            ]
+                          : [
+                              Colors.redAccent.shade700,
+                              Colors.redAccent,
+                              Colors.red.shade200,
+                            ],
                       center: Alignment.center,
                       radius: 0.95,
                     ),
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.redAccent.withOpacity(0.5),
+                        color: sosShadowColor,
                         blurRadius: 40,
                         spreadRadius: 8,
                         offset: Offset(0, 16),
                       ),
                     ],
-                    border: Border.all(color: Colors.white, width: 6),
+                    border: Border.all(color: sosBorderColor, width: 6),
                   ),
                   child: Center(
                     child: Text(
@@ -186,6 +201,8 @@ class EmergencyListScreen extends StatelessWidget {
               icon: Icons.location_on_rounded,
               title: 'Share Location',
               subtitle: 'Send your location to emergency services',
+              color: actionTileColor,
+              foreground: actionTileForeground,
               onTap: () {
                 Navigator.push(
                   context,
@@ -201,13 +218,12 @@ class EmergencyListScreen extends StatelessWidget {
               icon: Icons.phone_in_talk_rounded,
               title: 'Emergency Contacts',
               subtitle: 'Manage your emergency contact list',
+              color: actionTileColor,
+              foreground: actionTileForeground,
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                    // builder: (_) => const EmergencyContactsScreen(),
-                    builder: (_) => const ContactsScreen(),
-                  ),
+                  MaterialPageRoute(builder: (_) => const ContactsScreen()),
                 );
               },
             ),
@@ -215,9 +231,9 @@ class EmergencyListScreen extends StatelessWidget {
             _actionTile(
               context,
               icon: Icons.headset_mic_rounded,
-              title: 'Need Help Choosing?',
-              subtitle: 'Chat with us to find the right service',
-              color: const Color(0xFF8B5CFF),
+              title: 'Want assist?',
+              subtitle: 'Chat with us to find the right support',
+              color: isDark ? const Color(0xFF8B5CFF) : const Color(0xFF8B5CFF),
               foreground: Colors.white,
               onTap: () {
                 Navigator.push(
@@ -234,14 +250,13 @@ class EmergencyListScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: const Color(0xFFE8FFF0),
+                color: infoBoxColor,
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: const Column(
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+                children: const [
                   Text('✓ Help is available 24/7'),
-                  Text('✓ Trained professionals are ready'),
                   Text("✓ Take a deep breath – you're safe"),
                 ],
               ),

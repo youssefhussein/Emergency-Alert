@@ -1,0 +1,2 @@
+# Add this to your pubspec.yaml under dependencies:
+# url_launcher: ^6.1.7

@@ -1,238 +1,408 @@
-import 'package:flutter/material.dart';
-
+import 'emergency_additional_info_screen.dart';
 import '../../services/emergency_service.dart';
-import 'send_info_form_screen.dart';
-import '../../main.dart'; // gives access to themeController
 
-class EmergencyDetailScreen extends StatelessWidget {
+import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+class EmergencyDetailScreen extends StatefulWidget {
   final EmergencyService service;
-
   const EmergencyDetailScreen({super.key, required this.service});
 
   @override
-  Widget build(BuildContext context) {
+  State<EmergencyDetailScreen> createState() => _EmergencyDetailScreenState();
+}
+
+class _EmergencyDetailScreenState extends State<EmergencyDetailScreen> {
+  String? profileName;
+  String? profilePhone;
+  bool _loadingProfile = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchProfile();
+  }
+
+  Future<void> _fetchProfile() async {
+    final supabase = Supabase.instance.client;
+    final user = supabase.auth.currentUser;
+    if (user == null) {
+      setState(() {
+        _loadingProfile = false;
+      });
+      return;
+    }
+    final response = await supabase
+        .from('profiles')
+        .select('full_name, phone')
+        .eq('id', user.id)
+        .single();
+    setState(() {
+      profileName = response['full_name'] ?? '';
+      profilePhone = response['phone'] ?? '';
+      _loadingProfile = false;
+    });
+  }
+
+  int _selectedType = -1;
+
+  List<_EmergencyType> _typesForTheme(BuildContext context) {
     final theme = Theme.of(context);
-    final c = theme.colorScheme;
-    return Scaffold(
-      // backgroundColor: const Color(0xFFF5F7FB),
-      backgroundColor: c.background,
-
-      appBar: AppBar(
-        // backgroundColor: Colors.white,
-        backgroundColor: c.surface,
-        foregroundColor: c.onSurface,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(service.name),
+    final isDark = theme.brightness == Brightness.dark;
+    return [
+      _EmergencyType(
+        icon: Icons.favorite_border,
+        title: 'Cardiac Emergency',
+        description: 'Heart attack, chest pain, breathing difficulties',
+        color: isDark ? const Color(0xFF3B2323) : const Color(0xFFFFE5E5),
+        borderColor: isDark ? const Color(0xFFB71C1C) : const Color(0xFFFFB3B3),
+        iconColor: isDark ? Colors.red[200]! : const Color(0xFFD32F2F),
+        textColor: isDark ? Colors.red[200]! : const Color(0xFFD32F2F),
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          // Reassurance banner
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFE8FFF0),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Row(
+      _EmergencyType(
+        icon: Icons.directions_car,
+        title: 'Traffic Accident',
+        description: 'Vehicle collision, road accident, injuries',
+        color: isDark ? const Color(0xFF3B2F23) : const Color(0xFFFFF6E0),
+        borderColor: isDark ? const Color(0xFFFFA726) : const Color(0xFFFFD59E),
+        iconColor: isDark ? Colors.orange[200]! : const Color(0xFFF57C00),
+        textColor: isDark ? Colors.orange[200]! : const Color(0xFFF57C00),
+      ),
+      _EmergencyType(
+        icon: Icons.local_hospital,
+        title: 'Medical Emergency',
+        description: 'General medical emergency, illness, injury',
+        color: isDark ? const Color(0xFF232B3B) : const Color(0xFFE6F0FF),
+        borderColor: isDark ? const Color(0xFF1976D2) : const Color(0xFFB3D1FF),
+        iconColor: isDark ? Colors.blue[200]! : const Color(0xFF1976D2),
+        textColor: isDark ? Colors.blue[200]! : const Color(0xFF1976D2),
+      ),
+      _EmergencyType(
+        icon: Icons.warning_amber_outlined,
+        title: 'Other Emergency',
+        description: 'Fire, natural disaster, other urgent situations',
+        color: isDark ? const Color(0xFF32233B) : const Color(0xFFF3E6FF),
+        borderColor: isDark ? const Color(0xFF8E24AA) : const Color(0xFFD1B3FF),
+        iconColor: isDark ? Colors.purple[200]! : const Color(0xFF8E24AA),
+        textColor: isDark ? Colors.purple[200]! : const Color(0xFF8E24AA),
+      ),
+    ];
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_loadingProfile) {
+      return Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final cardColor = theme.cardColor;
+    final scaffoldBg = theme.scaffoldBackgroundColor;
+    final shadowColor = isDark ? Colors.black54 : Colors.black12;
+    final stepActiveColor = isDark ? Colors.red[300] : Colors.red[600];
+    final stepInactiveColor = isDark ? Colors.grey[700] : Colors.grey[200];
+    final stepBorderColor = isDark ? Colors.red[300]! : Colors.red[600]!;
+    final stepTextColor = isDark ? Colors.white : Colors.black54;
+    final types = _typesForTheme(context);
+    final dangerBannerColor = isDark
+        ? const Color(0xFF3B2323)
+        : const Color(0xFFFFE5E5);
+    final dangerTextColor = isDark ? Colors.red[200] : Colors.red[700];
+    return Scaffold(
+      backgroundColor: scaffoldBg,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Icon(Icons.favorite_border, color: Color(0xFF00C853)),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    service.reassuranceText,
-                    style: const TextStyle(fontSize: 13),
+                Container(
+                  decoration: BoxDecoration(
+                    color: cardColor,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: shadowColor,
+                        blurRadius: 8,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.phone_in_talk,
+                              color: isDark ? Colors.red[200] : Colors.red[400],
+                            ),
+                            SizedBox(width: 8),
+                            Text(
+                              'Emergency Request',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 20,
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 16),
+                        _buildStepper(),
+                        SizedBox(height: 16),
+                        Text(
+                          'What type of emergency are you reporting?',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16,
+                          ),
+                        ),
+                        SizedBox(height: 16),
+                        ...List.generate(
+                          types.length,
+                          (i) => _buildTypeCard(i, types),
+                        ),
+                        SizedBox(height: 16),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: isDark
+                                  ? Colors.red[400]
+                                  : Colors.red[600],
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 32,
+                                vertical: 12,
+                              ),
+                            ),
+                            onPressed:
+                                _selectedType != -1 && profileName != null
+                                ? () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) =>
+                                            EmergencyAdditionalInfoScreen(
+                                              onBack: () =>
+                                                  Navigator.pop(context),
+                                              onSubmit: () {},
+                                              type: types[_selectedType].title,
+                                              location:
+                                                  'Unknown', // TODO: Replace with real location
+                                              profileName: profileName!,
+                                              profilePhone: profilePhone ?? '',
+                                            ),
+                                      ),
+                                    );
+                                  }
+                                : null,
+                            child: Text('Continue'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                SizedBox(height: 24),
+                Container(
+                  decoration: BoxDecoration(
+                    color: dangerBannerColor,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  padding: EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        'In immediate danger?',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      SizedBox(height: 12),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: isDark
+                              ? Colors.red[300]
+                              : Colors.red[700],
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          padding: EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        onPressed: () async {
+                          final Uri telUri = Uri(scheme: 'tel', path: '108');
+                          if (await canLaunchUrl(telUri)) {
+                            await launchUrl(telUri);
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Could not launch dialer'),
+                              ),
+                            );
+                          }
+                        },
+                        child: Text(
+                          'Call 108 Now',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        'For life-threatening emergencies, call directly',
+                        style: TextStyle(color: dangerTextColor, fontSize: 13),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 16),
-
-          const Text(
-            'Quick Actions',
-            style: TextStyle(fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 8),
-
-          // Call now button
-          SizedBox(
-            height: 52,
-            child: ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFFF3B30),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-              ),
-              icon: const Icon(Icons.call_rounded),
-              label: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text('Call Now  ${service.number}'),
-                  const Icon(Icons.arrow_forward_ios, size: 18),
-                ],
-              ),
-              onPressed: () async {
-                final uri = Uri(scheme: 'tel', path: service.number);
-                // await launchUrl(uri);
-              },
-            ),
-          ),
-
-          const SizedBox(height: 10),
-
-          // Send info first
-          _whiteTile(
-            context,
-            icon: Icons.assignment_rounded,
-            title: 'Send Information First',
-            subtitle: 'Help us prepare for your emergency',
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => SendInfoFormScreen(service: service),
-                ),
-              );
-            },
-          ),
-
-          const SizedBox(height: 10),
-
-          _whiteTile(
-            context,
-            icon: Icons.phone_in_talk_rounded,
-            title: 'Direct Line',
-            subtitle: '(555) 456-7890',
-            trailing: const Text('Call', style: TextStyle(color: Colors.blue)),
-            onTap: () async {
-              final uri = Uri(scheme: 'tel', path: '5554567890');
-              // await launchUrl(uri);
-            },
-          ),
-
-          const SizedBox(height: 10),
-
-          _whiteTile(
-            context,
-            icon: Icons.location_on_rounded,
-            title: 'Nearest Location',
-            subtitle: '321 Rescue Road, Emergency Hub',
-            trailing: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFFF3B30),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              onPressed: () {
-                // open maps later
-              },
-              child: const Text('Get Directions'),
-            ),
-          ),
-
-          const SizedBox(height: 24),
-
-          const Text(
-            'Available Services',
-            style: TextStyle(fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 8),
-          ...service.availableServices.map(
-            (s) => Container(
-              margin: const EdgeInsets.only(bottom: 8),
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: const Color(0xFFE8FFF0),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.check_circle, color: Color(0xFF00C853)),
-                  const SizedBox(width: 8),
-                  Text(s),
-                ],
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFFF8E1),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: const Row(
-              children: [
-                Icon(Icons.favorite, color: Color(0xFFFFA000)),
-                SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Emergency responders are trained professionals ready to help you. '
-                    'Stay calm, breathe slowly, and help will arrive soon.',
-                    style: TextStyle(fontSize: 13),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
 
-  Widget _whiteTile(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    Widget? trailing,
-    VoidCallback? onTap,
-  }) {
-    return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: onTap,
+  Widget _buildStepper() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: [
+        _stepCircle(1, true, isDark),
+        _stepLine(isDark),
+        _stepCircle(2, false, isDark),
+        _stepLine(isDark),
+        _stepCircle(3, false, isDark),
+      ],
+    );
+  }
+
+  Widget _stepCircle(int step, bool active, bool isDark) {
+    return Container(
+      width: 28,
+      height: 28,
+      decoration: BoxDecoration(
+        color: active
+            ? (isDark ? Colors.red[300] : Colors.red[600])
+            : (isDark ? Colors.grey[700] : Colors.grey[200]),
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: active
+              ? (isDark ? Colors.red[300]! : Colors.red[600]!)
+              : (isDark ? Colors.grey[500]! : Colors.grey[400]!),
+          width: 2,
+        ),
+      ),
+      child: Center(
+        child: Text(
+          '$step',
+          style: TextStyle(
+            color: active
+                ? Colors.white
+                : (isDark ? Colors.white70 : Colors.black54),
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _stepLine(bool isDark) {
+    return Container(
+      width: 32,
+      height: 2,
+      color: isDark ? Colors.grey[700] : Colors.grey[300],
+    );
+  }
+
+  Widget _buildTypeCard(int index, List<_EmergencyType> types) {
+    final type = types[index];
+    final selected = _selectedType == index;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _selectedType = index;
+        });
+      },
+      child: Container(
+        margin: EdgeInsets.only(bottom: 14),
+        decoration: BoxDecoration(
+          color: type.color,
+          border: Border.all(
+            color: selected ? type.borderColor : Colors.transparent,
+            width: 2,
+          ),
+          borderRadius: BorderRadius.circular(12),
+        ),
         child: Padding(
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
           child: Row(
             children: [
-              CircleAvatar(
-                backgroundColor: Colors.grey.shade100,
-                child: Icon(icon, color: Colors.grey.shade800),
-              ),
-              const SizedBox(width: 12),
+              Icon(type.icon, color: type.iconColor, size: 32),
+              SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      title,
-                      style: const TextStyle(fontWeight: FontWeight.w600),
+                      type.title,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: type.textColor,
+                      ),
                     ),
-                    const SizedBox(height: 4),
+                    SizedBox(height: 4),
                     Text(
-                      subtitle,
-                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                      type.description,
+                      style: TextStyle(
+                        color: isDark ? Colors.white70 : Colors.black87,
+                        fontSize: 13,
+                      ),
                     ),
                   ],
                 ),
               ),
-              if (trailing != null) trailing,
             ],
           ),
         ),
       ),
     );
   }
+}
+
+class _EmergencyType {
+  final IconData icon;
+  final String title;
+  final String description;
+  final Color color;
+  final Color borderColor;
+  final Color iconColor;
+  final Color textColor;
+
+  _EmergencyType({
+    required this.icon,
+    required this.title,
+    required this.description,
+    required this.color,
+    required this.borderColor,
+    required this.iconColor,
+    required this.textColor,
+  });
 }
