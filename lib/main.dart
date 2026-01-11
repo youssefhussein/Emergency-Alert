@@ -1,3 +1,4 @@
+import 'package:emergency_alert/screens/medical/medical_info_screen.dart';
 import 'package:firebase_ai/firebase_ai.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -11,6 +12,15 @@ import 'package:firebase_core/firebase_core.dart';
 import 'screens/on-boarding.dart';
 
 import 'firebase_options.dart';
+import 'screens/home_shell_screen.dart';
+import 'widgets/app_drawer.dart';
+
+import 'package:emergency_alert/screens/emergency/emergency_list_screen.dart';
+import 'package:emergency_alert/screens/emergency/share_location_screen.dart';
+import 'package:emergency_alert/screens/profile/profile_screen.dart';
+import 'package:emergency_alert/screens/profile/contacts/contacts_screen.dart';
+import 'package:emergency_alert/screens/profile/history/settings_screen.dart';
+import 'package:emergency_alert/screens/profile/history/emergency_history_screen.dart';
 
 late final ThemeController themeController;
 
@@ -26,16 +36,7 @@ Future<void> main() async {
     anonKey: dotenv.get("SUPABASE_KEY"),
   );
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  // final model =
-  //       FirebaseAI.googleAI().generativeModel(model: 'gemini-2.5-flash');
 
-  // // Provide a prompt that contains text
-  // final prompt = [Content.text('Write a story about a magic backpack.')];
-
-  // To generate text output, call generateContent with the text input
-  // final response = await model.generateContent(prompt);
-  // print(response.text);
-  // runApp(const MainApp());
   runApp(const ProviderScope(child: MainApp()));
 }
 
@@ -52,7 +53,6 @@ class _MainAppState extends State<MainApp> {
   @override
   void initState() {
     super.initState();
-    // You can persist onboarding state with SharedPreferences if needed
   }
 
   void _finishOnboarding() {
@@ -72,6 +72,17 @@ class _MainAppState extends State<MainApp> {
           home: _onboardingComplete
               ? _getInitialScreen()
               : OnboardingScreenWrapper(onFinish: _finishOnboarding),
+          routes: {
+            '/home': (context) => const HomeShellScreen(),
+            '/history': (context) => const EmergencyHistoryScreen(),
+            '/signup': (context) => const SignupScreen(),
+
+            // Drawer destinations (Citizen)
+            '/profile': (context) => const ProfileScreen(),
+            '/medical': (context) => const MedicalInfoScreen(),
+            '/contacts': (context) => const ContactsScreen(),
+            '/settings': (context) => const SettingsScreen(),
+          },
         );
       },
     );
@@ -80,7 +91,8 @@ class _MainAppState extends State<MainApp> {
   Widget _getInitialScreen() {
     final session = Supabase.instance.client.auth.currentSession;
     if (session != null) {
-      return const EmergencyListScreen();
+      // Uses a Drawer wrapper so rubric navigation is visible.
+      return const HomeShellScreen();
     }
     return const SignupScreen();
   }
