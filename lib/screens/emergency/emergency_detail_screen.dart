@@ -50,44 +50,52 @@ class _EmergencyDetailScreenState extends State<EmergencyDetailScreen> {
   List<_EmergencyType> _typesForTheme(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    return [
-      _EmergencyType(
-        icon: Icons.favorite_border,
-        title: 'Cardiac Emergency',
-        description: 'Heart attack, chest pain, breathing difficulties',
-        color: isDark ? const Color(0xFF3B2323) : const Color(0xFFFFE5E5),
-        borderColor: isDark ? const Color(0xFFB71C1C) : const Color(0xFFFFB3B3),
-        iconColor: isDark ? Colors.red[200]! : const Color(0xFFD32F2F),
-        textColor: isDark ? Colors.red[200]! : const Color(0xFFD32F2F),
-      ),
-      _EmergencyType(
-        icon: Icons.directions_car,
-        title: 'Traffic Accident',
-        description: 'Vehicle collision, road accident, injuries',
-        color: isDark ? const Color(0xFF3B2F23) : const Color(0xFFFFF6E0),
-        borderColor: isDark ? const Color(0xFFFFA726) : const Color(0xFFFFD59E),
-        iconColor: isDark ? Colors.orange[200]! : const Color(0xFFF57C00),
-        textColor: isDark ? Colors.orange[200]! : const Color(0xFFF57C00),
-      ),
-      _EmergencyType(
-        icon: Icons.local_hospital,
-        title: 'Medical Emergency',
-        description: 'General medical emergency, illness, injury',
-        color: isDark ? const Color(0xFF232B3B) : const Color(0xFFE6F0FF),
-        borderColor: isDark ? const Color(0xFF1976D2) : const Color(0xFFB3D1FF),
-        iconColor: isDark ? Colors.blue[200]! : const Color(0xFF1976D2),
-        textColor: isDark ? Colors.blue[200]! : const Color(0xFF1976D2),
-      ),
-      _EmergencyType(
-        icon: Icons.warning_amber_outlined,
-        title: 'Other Emergency',
-        description: 'Fire, natural disaster, other urgent situations',
-        color: isDark ? const Color(0xFF32233B) : const Color(0xFFF3E6FF),
-        borderColor: isDark ? const Color(0xFF8E24AA) : const Color(0xFFD1B3FF),
-        iconColor: isDark ? Colors.purple[200]! : const Color(0xFF8E24AA),
-        textColor: isDark ? Colors.purple[200]! : const Color(0xFF8E24AA),
-      ),
-    ];
+    return emergencyServices.map((service) {
+      // Map service colors to dark/light theme variants
+      Color cardColor;
+      Color borderColor;
+      Color iconColor;
+      Color textColor;
+      
+      switch (service.type) {
+        case EmergencyType.ambulance:
+          cardColor = isDark ? const Color(0xFF3B2323) : service.background;
+          borderColor = isDark ? const Color(0xFFB71C1C) : const Color(0xFFFFB3B3);
+          iconColor = isDark ? Colors.red[200]! : service.iconColor;
+          textColor = isDark ? Colors.red[200]! : service.iconColor;
+          break;
+        case EmergencyType.police:
+          cardColor = isDark ? const Color(0xFF232B3B) : service.background;
+          borderColor = isDark ? const Color(0xFF1976D2) : const Color(0xFFB3D1FF);
+          iconColor = isDark ? Colors.blue[200]! : service.iconColor;
+          textColor = isDark ? Colors.blue[200]! : service.iconColor;
+          break;
+        case EmergencyType.fire:
+          cardColor = isDark ? const Color(0xFF3B2F23) : service.background;
+          borderColor = isDark ? const Color(0xFFFFA726) : const Color(0xFFFFD59E);
+          iconColor = isDark ? Colors.orange[200]! : service.iconColor;
+          textColor = isDark ? Colors.orange[200]! : service.iconColor;
+          break;
+        case EmergencyType.car:
+          cardColor = isDark ? const Color(0xFF2B3B2B) : service.background;
+          borderColor = isDark ? const Color(0xFF4CAF50) : const Color(0xFFA5D6A7);
+          iconColor = isDark ? Colors.green[200]! : service.iconColor;
+          textColor = isDark ? Colors.green[200]! : service.iconColor;
+          break;
+      }
+      
+      return _EmergencyType(
+        emergencyType: service.type,
+        emergencyService: service,
+        icon: service.icon,
+        title: service.name,
+        description: service.availableServices.join(', '),
+        color: cardColor,
+        borderColor: borderColor,
+        iconColor: iconColor,
+        textColor: textColor,
+      );
+    }).toList();
   }
 
   @override
@@ -388,6 +396,8 @@ class _EmergencyDetailScreenState extends State<EmergencyDetailScreen> {
 }
 
 class _EmergencyType {
+  final EmergencyType emergencyType;
+  final EmergencyService emergencyService;
   final IconData icon;
   final String title;
   final String description;
@@ -397,6 +407,8 @@ class _EmergencyType {
   final Color textColor;
 
   _EmergencyType({
+    required this.emergencyType,
+    required this.emergencyService,
     required this.icon,
     required this.title,
     required this.description,
