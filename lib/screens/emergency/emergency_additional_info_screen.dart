@@ -1,8 +1,10 @@
 import 'package:emergency_alert/services/emergency_service.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 
 import '../../services/location_service.dart';
 import '../../services/emergency_request_service.dart';
+import '../../services/geocoding_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:io';
 import 'dart:async';
@@ -208,6 +210,16 @@ class _EmergencyAdditionalInfoScreenState
       final pos = await LocationService().getCurrentPosition();
       _lat = pos.latitude;
       _lng = pos.longitude;
+
+      // Geocode the location to get address
+      try {
+        final geocodingService = GeocodingService();
+        _detectedAddress = await geocodingService.geocodeAPI(pos.latitude, pos.longitude);
+        debugPrint('Geocoding successful: $_detectedAddress');
+      } catch (e) {
+        debugPrint('Geocoding failed: $e');
+        // Keep _detectedAddress null, will show widget.location
+      }
     } catch (e) {
       _lat = null;
       _lng = null;
@@ -978,7 +990,7 @@ class _EmergencyAdditionalInfoScreenState
                               style: TextStyle(color: cs.onSurface),
                             ),
                             Text(
-                              'Location: ${widget.location}',
+                              'Location: ${_detectedAddress ?? widget.location}',
                               style: TextStyle(color: cs.onSurface),
                             ),
                             Text(

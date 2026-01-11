@@ -24,26 +24,25 @@ class GeocodingService {
     return parts.isEmpty ? null : parts.join(', ');
   }
 
-
   Future<String> geocodeAPI(double lat, double lng) async {
-    final apiKey = dotenv.get('GEOCODE_API');
+    final apiKey = dotenv.get('GEOCODE_API_V2');
 
-
-    final url = 'https://api.geocode.ai/v1/reverse?key=$apiKey&point.lat=$lat&point.lon=$lng';
+    final url =
+        'https://us1.locationiq.com/v1/reverse?key=$apiKey&lat=$lat&lon=$lng&format=json&';
 
     final response = await get(Uri.parse(url));
     if (response.statusCode == 200) {
       final reverseGeocode = ReverseGeocode.fromRawJson(response.body);
-      if (reverseGeocode.features.isNotEmpty) {
-        final properties = reverseGeocode.features.first.properties;
-        return properties.label;
+      if (reverseGeocode.displayName != null &&
+          reverseGeocode.displayName!.isNotEmpty) {
+        return reverseGeocode.displayName!;
       } else {
-        throw Exception('No features found in geocoding response.');
+        throw Exception(
+          'No display name found in geocoding response. ${response.body}',
+        );
       }
     } else {
       throw Exception('Failed to fetch geocode: ${response.statusCode}');
     }
   }
 }
-
-
