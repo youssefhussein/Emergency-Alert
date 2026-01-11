@@ -1,3 +1,4 @@
+import 'package:emergency_alert/screens/drawer/app_drawer.dart';
 import 'package:emergency_alert/screens/profile/contacts/contacts_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -38,6 +39,7 @@ class EmergencyListScreen extends StatelessWidget {
     final sosShadowColor = c.error.withOpacity(isDark ? 0.28 : 0.42);
 
     return Scaffold(
+      drawer: const AppDrawer(),
       backgroundColor: c.surface,
       appBar: AppBar(
         backgroundColor: c.surface,
