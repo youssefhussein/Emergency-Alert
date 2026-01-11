@@ -24,12 +24,6 @@
 @import camera_avfoundation;
 #endif
 
-#if __has_include(<contacts_service/ContactsServicePlugin.h>)
-#import <contacts_service/ContactsServicePlugin.h>
-#else
-@import contacts_service;
-#endif
-
 #if __has_include(<fast_contacts/FastContactsPlugin.h>)
 #import <fast_contacts/FastContactsPlugin.h>
 #else
@@ -58,6 +52,12 @@
 #import <firebase_core/FLTFirebaseCorePlugin.h>
 #else
 @import firebase_core;
+#endif
+
+#if __has_include(<flutter_contacts/FlutterContactsPlugin.h>)
+#import <flutter_contacts/FlutterContactsPlugin.h>
+#else
+@import flutter_contacts;
 #endif
 
 #if __has_include(<geocoding_ios/GeocodingPlugin.h>)
@@ -126,12 +126,12 @@
   [AppLinksIosPlugin registerWithRegistrar:[registry registrarForPlugin:@"AppLinksIosPlugin"]];
   [AudioplayersDarwinPlugin registerWithRegistrar:[registry registrarForPlugin:@"AudioplayersDarwinPlugin"]];
   [CameraPlugin registerWithRegistrar:[registry registrarForPlugin:@"CameraPlugin"]];
-  [ContactsServicePlugin registerWithRegistrar:[registry registrarForPlugin:@"ContactsServicePlugin"]];
   [FastContactsPlugin registerWithRegistrar:[registry registrarForPlugin:@"FastContactsPlugin"]];
   [FileSelectorPlugin registerWithRegistrar:[registry registrarForPlugin:@"FileSelectorPlugin"]];
   [FLTFirebaseAppCheckPlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTFirebaseAppCheckPlugin"]];
   [FLTFirebaseAuthPlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTFirebaseAuthPlugin"]];
   [FLTFirebaseCorePlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTFirebaseCorePlugin"]];
+  [FlutterContactsPlugin registerWithRegistrar:[registry registrarForPlugin:@"FlutterContactsPlugin"]];
   [GeocodingPlugin registerWithRegistrar:[registry registrarForPlugin:@"GeocodingPlugin"]];
   [GeolocatorPlugin registerWithRegistrar:[registry registrarForPlugin:@"GeolocatorPlugin"]];
   [FLTImagePickerPlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTImagePickerPlugin"]];
