@@ -1,4 +1,4 @@
-import 'package:emergency_alert/screens/medical/medical_info_screen.dart';
+import 'package:emergency_alert/screens/profile/medical/medical_info_screen.dart';
 import 'package:firebase_ai/firebase_ai.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -12,15 +12,15 @@ import 'package:firebase_core/firebase_core.dart';
 import 'screens/on-boarding.dart';
 
 import 'firebase_options.dart';
-import 'screens/home_shell_screen.dart';
-import 'widgets/app_drawer.dart';
+import 'screens/drawer/home_shell_screen.dart';
+import 'screens/drawer/app_drawer.dart';
 
 import 'package:emergency_alert/screens/emergency/emergency_list_screen.dart';
 import 'package:emergency_alert/screens/emergency/share_location_screen.dart';
 import 'package:emergency_alert/screens/profile/profile_screen.dart';
 import 'package:emergency_alert/screens/profile/contacts/contacts_screen.dart';
-import 'package:emergency_alert/screens/profile/history/settings_screen.dart';
-import 'package:emergency_alert/screens/profile/history/emergency_history_screen.dart';
+import 'package:emergency_alert/screens/drawer/settings/settings_screen.dart';
+import 'package:emergency_alert/screens/drawer/history/emergency_history_screen.dart';
 
 late final ThemeController themeController;
 
