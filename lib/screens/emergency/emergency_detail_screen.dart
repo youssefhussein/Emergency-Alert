@@ -2,6 +2,8 @@ import 'emergency_additional_info_screen.dart';
 import '../../services/emergency_service.dart';
 
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class EmergencyDetailScreen extends StatefulWidget {
   final EmergencyService service;
@@ -12,51 +14,103 @@ class EmergencyDetailScreen extends StatefulWidget {
 }
 
 class _EmergencyDetailScreenState extends State<EmergencyDetailScreen> {
+  String? profileName;
+  String? profilePhone;
+  bool _loadingProfile = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchProfile();
+  }
+
+  Future<void> _fetchProfile() async {
+    final supabase = Supabase.instance.client;
+    final user = supabase.auth.currentUser;
+    if (user == null) {
+      setState(() {
+        _loadingProfile = false;
+      });
+      return;
+    }
+    final response = await supabase
+        .from('profiles')
+        .select('full_name, phone')
+        .eq('id', user.id)
+        .single();
+    setState(() {
+      profileName = response['full_name'] ?? '';
+      profilePhone = response['phone'] ?? '';
+      _loadingProfile = false;
+    });
+  }
+
   int _selectedType = -1;
 
-  final List<_EmergencyType> _types = [
-    _EmergencyType(
-      icon: Icons.favorite_border,
-      title: 'Cardiac Emergency',
-      description: 'Heart attack, chest pain, breathing difficulties',
-      color: Color(0xFFFFE5E5),
-      borderColor: Color(0xFFFFB3B3),
-      iconColor: Color(0xFFD32F2F),
-      textColor: Color(0xFFD32F2F),
-    ),
-    _EmergencyType(
-      icon: Icons.directions_car,
-      title: 'Traffic Accident',
-      description: 'Vehicle collision, road accident, injuries',
-      color: Color(0xFFFFF6E0),
-      borderColor: Color(0xFFFFD59E),
-      iconColor: Color(0xFFF57C00),
-      textColor: Color(0xFFF57C00),
-    ),
-    _EmergencyType(
-      icon: Icons.local_hospital,
-      title: 'Medical Emergency',
-      description: 'General medical emergency, illness, injury',
-      color: Color(0xFFE6F0FF),
-      borderColor: Color(0xFFB3D1FF),
-      iconColor: Color(0xFF1976D2),
-      textColor: Color(0xFF1976D2),
-    ),
-    _EmergencyType(
-      icon: Icons.warning_amber_outlined,
-      title: 'Other Emergency',
-      description: 'Fire, natural disaster, other urgent situations',
-      color: Color(0xFFF3E6FF),
-      borderColor: Color(0xFFD1B3FF),
-      iconColor: Color(0xFF8E24AA),
-      textColor: Color(0xFF8E24AA),
-    ),
-  ];
+  List<_EmergencyType> _typesForTheme(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    return [
+      _EmergencyType(
+        icon: Icons.favorite_border,
+        title: 'Cardiac Emergency',
+        description: 'Heart attack, chest pain, breathing difficulties',
+        color: isDark ? const Color(0xFF3B2323) : const Color(0xFFFFE5E5),
+        borderColor: isDark ? const Color(0xFFB71C1C) : const Color(0xFFFFB3B3),
+        iconColor: isDark ? Colors.red[200]! : const Color(0xFFD32F2F),
+        textColor: isDark ? Colors.red[200]! : const Color(0xFFD32F2F),
+      ),
+      _EmergencyType(
+        icon: Icons.directions_car,
+        title: 'Traffic Accident',
+        description: 'Vehicle collision, road accident, injuries',
+        color: isDark ? const Color(0xFF3B2F23) : const Color(0xFFFFF6E0),
+        borderColor: isDark ? const Color(0xFFFFA726) : const Color(0xFFFFD59E),
+        iconColor: isDark ? Colors.orange[200]! : const Color(0xFFF57C00),
+        textColor: isDark ? Colors.orange[200]! : const Color(0xFFF57C00),
+      ),
+      _EmergencyType(
+        icon: Icons.local_hospital,
+        title: 'Medical Emergency',
+        description: 'General medical emergency, illness, injury',
+        color: isDark ? const Color(0xFF232B3B) : const Color(0xFFE6F0FF),
+        borderColor: isDark ? const Color(0xFF1976D2) : const Color(0xFFB3D1FF),
+        iconColor: isDark ? Colors.blue[200]! : const Color(0xFF1976D2),
+        textColor: isDark ? Colors.blue[200]! : const Color(0xFF1976D2),
+      ),
+      _EmergencyType(
+        icon: Icons.warning_amber_outlined,
+        title: 'Other Emergency',
+        description: 'Fire, natural disaster, other urgent situations',
+        color: isDark ? const Color(0xFF32233B) : const Color(0xFFF3E6FF),
+        borderColor: isDark ? const Color(0xFF8E24AA) : const Color(0xFFD1B3FF),
+        iconColor: isDark ? Colors.purple[200]! : const Color(0xFF8E24AA),
+        textColor: isDark ? Colors.purple[200]! : const Color(0xFF8E24AA),
+      ),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (_loadingProfile) {
+      return Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final cardColor = theme.cardColor;
+    final scaffoldBg = theme.scaffoldBackgroundColor;
+    final shadowColor = isDark ? Colors.black54 : Colors.black12;
+    final stepActiveColor = isDark ? Colors.red[300] : Colors.red[600];
+    final stepInactiveColor = isDark ? Colors.grey[700] : Colors.grey[200];
+    final stepBorderColor = isDark ? Colors.red[300]! : Colors.red[600]!;
+    final stepTextColor = isDark ? Colors.white : Colors.black54;
+    final types = _typesForTheme(context);
+    final dangerBannerColor = isDark
+        ? const Color(0xFF3B2323)
+        : const Color(0xFFFFE5E5);
+    final dangerTextColor = isDark ? Colors.red[200] : Colors.red[700];
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: scaffoldBg,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
@@ -66,11 +120,11 @@ class _EmergencyDetailScreenState extends State<EmergencyDetailScreen> {
               children: [
                 Container(
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: cardColor,
                     borderRadius: BorderRadius.circular(12),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black12,
+                        color: shadowColor,
                         blurRadius: 8,
                         offset: Offset(0, 2),
                       ),
@@ -83,7 +137,10 @@ class _EmergencyDetailScreenState extends State<EmergencyDetailScreen> {
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.phone_in_talk, color: Colors.red[400]),
+                            Icon(
+                              Icons.phone_in_talk,
+                              color: isDark ? Colors.red[200] : Colors.red[400],
+                            ),
                             SizedBox(width: 8),
                             Text(
                               'Emergency Request',
@@ -106,15 +163,17 @@ class _EmergencyDetailScreenState extends State<EmergencyDetailScreen> {
                         ),
                         SizedBox(height: 16),
                         ...List.generate(
-                          _types.length,
-                          (i) => _buildTypeCard(i),
+                          types.length,
+                          (i) => _buildTypeCard(i, types),
                         ),
                         SizedBox(height: 16),
                         Align(
                           alignment: Alignment.centerRight,
                           child: ElevatedButton(
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.red[600],
+                              backgroundColor: isDark
+                                  ? Colors.red[400]
+                                  : Colors.red[600],
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(8),
                               ),
@@ -123,7 +182,8 @@ class _EmergencyDetailScreenState extends State<EmergencyDetailScreen> {
                                 vertical: 12,
                               ),
                             ),
-                            onPressed: _selectedType != -1
+                            onPressed:
+                                _selectedType != -1 && profileName != null
                                 ? () {
                                     Navigator.push(
                                       context,
@@ -133,9 +193,11 @@ class _EmergencyDetailScreenState extends State<EmergencyDetailScreen> {
                                               onBack: () =>
                                                   Navigator.pop(context),
                                               onSubmit: () {},
-                                              type: _types[_selectedType].title,
+                                              type: types[_selectedType].title,
                                               location:
                                                   'Unknown', // TODO: Replace with real location
+                                              profileName: profileName!,
+                                              profilePhone: profilePhone ?? '',
                                             ),
                                       ),
                                     );
@@ -151,7 +213,7 @@ class _EmergencyDetailScreenState extends State<EmergencyDetailScreen> {
                 SizedBox(height: 24),
                 Container(
                   decoration: BoxDecoration(
-                    color: Color(0xFFFFE5E5),
+                    color: dangerBannerColor,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   padding: EdgeInsets.all(20),
@@ -169,14 +231,25 @@ class _EmergencyDetailScreenState extends State<EmergencyDetailScreen> {
                       SizedBox(height: 12),
                       ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red[700],
+                          backgroundColor: isDark
+                              ? Colors.red[300]
+                              : Colors.red[700],
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
                           padding: EdgeInsets.symmetric(vertical: 14),
                         ),
-                        onPressed: () {
-                          // Call 108
+                        onPressed: () async {
+                          final Uri telUri = Uri(scheme: 'tel', path: '108');
+                          if (await canLaunchUrl(telUri)) {
+                            await launchUrl(telUri);
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Could not launch dialer'),
+                              ),
+                            );
+                          }
                         },
                         child: Text(
                           'Call 108 Now',
@@ -189,7 +262,7 @@ class _EmergencyDetailScreenState extends State<EmergencyDetailScreen> {
                       SizedBox(height: 8),
                       Text(
                         'For life-threatening emergencies, call directly',
-                        style: TextStyle(color: Colors.red[700], fontSize: 13),
+                        style: TextStyle(color: dangerTextColor, fontSize: 13),
                         textAlign: TextAlign.center,
                       ),
                     ],
@@ -204,27 +277,33 @@ class _EmergencyDetailScreenState extends State<EmergencyDetailScreen> {
   }
 
   Widget _buildStepper() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     return Row(
       mainAxisAlignment: MainAxisAlignment.start,
       children: [
-        _stepCircle(1, true),
-        _stepLine(),
-        _stepCircle(2, false),
-        _stepLine(),
-        _stepCircle(3, false),
+        _stepCircle(1, true, isDark),
+        _stepLine(isDark),
+        _stepCircle(2, false, isDark),
+        _stepLine(isDark),
+        _stepCircle(3, false, isDark),
       ],
     );
   }
 
-  Widget _stepCircle(int step, bool active) {
+  Widget _stepCircle(int step, bool active, bool isDark) {
     return Container(
       width: 28,
       height: 28,
       decoration: BoxDecoration(
-        color: active ? Colors.red[600] : Colors.grey[200],
+        color: active
+            ? (isDark ? Colors.red[300] : Colors.red[600])
+            : (isDark ? Colors.grey[700] : Colors.grey[200]),
         shape: BoxShape.circle,
         border: Border.all(
-          color: active ? Colors.red[600]! : Colors.grey[400]!,
+          color: active
+              ? (isDark ? Colors.red[300]! : Colors.red[600]!)
+              : (isDark ? Colors.grey[500]! : Colors.grey[400]!),
           width: 2,
         ),
       ),
@@ -232,7 +311,9 @@ class _EmergencyDetailScreenState extends State<EmergencyDetailScreen> {
         child: Text(
           '$step',
           style: TextStyle(
-            color: active ? Colors.white : Colors.black54,
+            color: active
+                ? Colors.white
+                : (isDark ? Colors.white70 : Colors.black54),
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -240,13 +321,19 @@ class _EmergencyDetailScreenState extends State<EmergencyDetailScreen> {
     );
   }
 
-  Widget _stepLine() {
-    return Container(width: 32, height: 2, color: Colors.grey[300]);
+  Widget _stepLine(bool isDark) {
+    return Container(
+      width: 32,
+      height: 2,
+      color: isDark ? Colors.grey[700] : Colors.grey[300],
+    );
   }
 
-  Widget _buildTypeCard(int index) {
-    final type = _types[index];
+  Widget _buildTypeCard(int index, List<_EmergencyType> types) {
+    final type = types[index];
     final selected = _selectedType == index;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     return GestureDetector(
       onTap: () {
         setState(() {
@@ -284,7 +371,10 @@ class _EmergencyDetailScreenState extends State<EmergencyDetailScreen> {
                     SizedBox(height: 4),
                     Text(
                       type.description,
-                      style: TextStyle(color: Colors.black87, fontSize: 13),
+                      style: TextStyle(
+                        color: isDark ? Colors.white70 : Colors.black87,
+                        fontSize: 13,
+                      ),
                     ),
                   ],
                 ),

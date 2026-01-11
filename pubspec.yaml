@@ -30,7 +30,7 @@ dependencies:
   google_generative_ai: ^0.4.3 # Use the latest version # The official Gemini SDK
 
   fast_contacts: ^5.0.1
-
+  contacts_service: ^0.6.3
   intl: ^0.19.0 # For DateFormat
 
 dev_dependencies:

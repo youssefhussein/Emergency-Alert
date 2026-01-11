@@ -80,7 +80,17 @@ class _SignupScreenState extends State<SignupScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final bgColor = theme.scaffoldBackgroundColor;
+    final headingColor = isDark ? Colors.white : Colors.black;
+    final subheadingColor = isDark ? Colors.white70 : Colors.black54;
+    final fieldFillColor = isDark ? Colors.grey[850] : Colors.grey[100];
+    final iconColor = isDark ? Colors.grey[400] : Colors.grey[600];
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final borderColor = isDark ? Colors.grey[700]! : Colors.grey[300]!;
     return Scaffold(
+      backgroundColor: bgColor,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Container(
@@ -97,14 +107,14 @@ class _SignupScreenState extends State<SignupScreen> {
                     style: TextStyle(
                       fontSize: 36,
                       fontWeight: FontWeight.bold,
-                      color: Colors.black,
+                      color: headingColor,
                     ),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'By Creating A Free Account.',
-                    style: TextStyle(fontSize: 16, color: Colors.black54),
+                    style: TextStyle(fontSize: 16, color: subheadingColor),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 32),
@@ -114,6 +124,10 @@ class _SignupScreenState extends State<SignupScreen> {
                     icon: Icons.person_outline,
                     validator: (v) =>
                         v == null || v.isEmpty ? 'Enter your name' : null,
+                    fillColor: fieldFillColor,
+                    iconColor: iconColor,
+                    textColor: textColor,
+                    borderColor: borderColor,
                   ),
                   const SizedBox(height: 16),
                   _buildTextField(
@@ -124,6 +138,10 @@ class _SignupScreenState extends State<SignupScreen> {
                     validator: (v) => v != null && v.contains('@')
                         ? null
                         : 'Enter a valid email',
+                    fillColor: fieldFillColor,
+                    iconColor: iconColor,
+                    textColor: textColor,
+                    borderColor: borderColor,
                   ),
                   const SizedBox(height: 16),
                   _buildTextField(
@@ -133,6 +151,10 @@ class _SignupScreenState extends State<SignupScreen> {
                     keyboardType: TextInputType.phone,
                     validator: (v) =>
                         v == null || v.isEmpty ? 'Enter phone number' : null,
+                    fillColor: fieldFillColor,
+                    iconColor: iconColor,
+                    textColor: textColor,
+                    borderColor: borderColor,
                   ),
                   const SizedBox(height: 16),
                   _buildTextField(
@@ -142,24 +164,39 @@ class _SignupScreenState extends State<SignupScreen> {
                     obscureText: true,
                     validator: (v) =>
                         v != null && v.length >= 6 ? null : 'Min 6 characters',
+                    fillColor: fieldFillColor,
+                    iconColor: iconColor,
+                    textColor: textColor,
+                    borderColor: borderColor,
                   ),
                   const SizedBox(height: 16),
                   Row(
                     children: [
-                      Checkbox(
-                        value: _agree,
-                        onChanged: (val) {
-                          setState(() {
-                            _agree = val ?? false;
-                          });
-                        },
-                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      Theme(
+                        data: theme.copyWith(
+                          unselectedWidgetColor: isDark ? Colors.white70 : null,
+                        ),
+                        child: Checkbox(
+                          value: _agree,
+                          onChanged: (val) {
+                            setState(() {
+                              _agree = val ?? false;
+                            });
+                          },
+                          materialTapTargetSize:
+                              MaterialTapTargetSize.shrinkWrap,
+                          checkColor: isDark ? Colors.black : Colors.white,
+                          activeColor: Colors.redAccent,
+                        ),
                       ),
                       Expanded(
                         child: Wrap(
                           crossAxisAlignment: WrapCrossAlignment.center,
                           children: [
-                            Text('By checking the box you agree to our '),
+                            Text(
+                              'By checking the box you agree to our ',
+                              style: TextStyle(color: textColor),
+                            ),
                             GestureDetector(
                               onTap: () {},
                               child: Text(
@@ -170,7 +207,7 @@ class _SignupScreenState extends State<SignupScreen> {
                                 ),
                               ),
                             ),
-                            Text('and '),
+                            Text('and ', style: TextStyle(color: textColor)),
                             GestureDetector(
                               onTap: () {},
                               child: Text(
@@ -237,7 +274,10 @@ class _SignupScreenState extends State<SignupScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text('Already A Member? '),
+                      Text(
+                        'Already A Member? ',
+                        style: TextStyle(color: textColor),
+                      ),
                       GestureDetector(
                         onTap: () {
                           Navigator.push(
@@ -273,21 +313,41 @@ class _SignupScreenState extends State<SignupScreen> {
     bool obscureText = false,
     TextInputType keyboardType = TextInputType.text,
     String? Function(String?)? validator,
+    Color? fillColor,
+    Color? iconColor,
+    Color? textColor,
+    Color? borderColor,
   }) {
     return TextFormField(
       controller: controller,
       obscureText: obscureText,
       keyboardType: keyboardType,
       validator: validator,
+      style: TextStyle(color: textColor),
       decoration: InputDecoration(
         hintText: hint,
-        prefixIcon: Icon(icon, color: Colors.grey[600]),
+        hintStyle: TextStyle(color: textColor?.withOpacity(0.7)),
+        prefixIcon: Icon(icon, color: iconColor),
         filled: true,
-        fillColor: Colors.grey[100],
+        fillColor: fillColor,
         contentPadding: EdgeInsets.symmetric(vertical: 18, horizontal: 16),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
+          borderSide: BorderSide(
+            color: borderColor ?? Colors.transparent,
+            width: 1,
+          ),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(
+            color: borderColor ?? Colors.transparent,
+            width: 1,
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.redAccent, width: 2),
         ),
       ),
     );

@@ -62,9 +62,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final c = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+    final bgColor = c.surface;
+    final imageBg = isDark ? Colors.red[900] : Colors.red[100];
+    final indicatorActive = Colors.red;
+    final indicatorInactive = isDark ? Colors.grey[700] : Colors.grey[300];
+    final onSurface = c.onSurface;
+    final onSurfaceVariant = isDark ? Colors.white70 : c.onSurfaceVariant;
 
     return Scaffold(
-      backgroundColor: c.surface,
+      backgroundColor: bgColor,
       body: SafeArea(
         child: Column(
           children: [
@@ -87,7 +94,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           height: 200,
                           width: 200,
                           decoration: BoxDecoration(
-                            color: Colors.red[100],
+                            color: imageBg,
                             borderRadius: BorderRadius.circular(100),
                           ),
                           child: ClipOval(
@@ -95,10 +102,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               data['image']!,
                               fit: BoxFit.cover,
                               errorBuilder: (context, error, stackTrace) =>
-                                  const Icon(
+                                  Icon(
                                     Icons.warning_amber_outlined,
                                     size: 80,
-                                    color: Colors.red,
+                                    color: isDark
+                                        ? Colors.red[200]
+                                        : Colors.red,
                                   ),
                             ),
                           ),
@@ -108,7 +117,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           data['title']!,
                           style: theme.textTheme.headlineMedium?.copyWith(
                             fontWeight: FontWeight.bold,
-                            color: c.onSurface,
+                            color: onSurface,
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -125,7 +134,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         Text(
                           data['description']!,
                           style: theme.textTheme.bodyLarge?.copyWith(
-                            color: c.onSurfaceVariant,
+                            color: onSurfaceVariant,
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -147,8 +156,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   width: _currentPage == index ? 24 : 8,
                   decoration: BoxDecoration(
                     color: _currentPage == index
-                        ? Colors.red
-                        : Colors.grey[300],
+                        ? indicatorActive
+                        : indicatorInactive,
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ),
@@ -167,7 +176,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     onPressed: _onSkip,
                     child: Text(
                       'Skip',
-                      style: TextStyle(color: c.onSurfaceVariant, fontSize: 16),
+                      style: TextStyle(color: onSurfaceVariant, fontSize: 16),
                     ),
                   ),
                   const Spacer(),

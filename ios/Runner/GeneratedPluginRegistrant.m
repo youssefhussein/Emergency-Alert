@@ -24,6 +24,12 @@
 @import camera_avfoundation;
 #endif
 
+#if __has_include(<contacts_service/ContactsServicePlugin.h>)
+#import <contacts_service/ContactsServicePlugin.h>
+#else
+@import contacts_service;
+#endif
+
 #if __has_include(<fast_contacts/FastContactsPlugin.h>)
 #import <fast_contacts/FastContactsPlugin.h>
 #else
@@ -120,6 +126,7 @@
   [AppLinksIosPlugin registerWithRegistrar:[registry registrarForPlugin:@"AppLinksIosPlugin"]];
   [AudioplayersDarwinPlugin registerWithRegistrar:[registry registrarForPlugin:@"AudioplayersDarwinPlugin"]];
   [CameraPlugin registerWithRegistrar:[registry registrarForPlugin:@"CameraPlugin"]];
+  [ContactsServicePlugin registerWithRegistrar:[registry registrarForPlugin:@"ContactsServicePlugin"]];
   [FastContactsPlugin registerWithRegistrar:[registry registrarForPlugin:@"FastContactsPlugin"]];
   [FileSelectorPlugin registerWithRegistrar:[registry registrarForPlugin:@"FileSelectorPlugin"]];
   [FLTFirebaseAppCheckPlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTFirebaseAppCheckPlugin"]];

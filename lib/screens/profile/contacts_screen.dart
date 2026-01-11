@@ -1,12 +1,15 @@
+import 'dart:io' show Platform;
+
+import 'package:contacts_service/contacts_service.dart' as device_contacts;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import '../../models/contact.dart';
-import 'view_contact_profile_screen.dart';
 import '../../widgets/profile/contact_card_tile.dart';
-
 import 'contacts_provider.dart';
 import 'contacts_state.dart';
+import 'view_contact_profile_screen.dart';
 
 class ContactsScreen extends ConsumerStatefulWidget {
   const ContactsScreen({super.key});
@@ -23,6 +26,134 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
     Future.microtask(() => ref.read(contactsProvider.notifier).load());
   }
 
+  Future<void> _addFromContacts() async {
+    final status = await Permission.contacts.request();
+
+    if (status.isPermanentlyDenied) {
+      if (!mounted) return;
+
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Contacts Permission Required'),
+          content: const Text(
+            'Contacts permission is permanently denied. Please enable it in app settings to use this feature.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.of(ctx).pop();
+                await openAppSettings();
+              },
+              child: const Text('Open Settings'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    if (!status.isGranted) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Contacts permission denied.')),
+      );
+      return;
+    }
+
+    if (!Platform.isAndroid && !Platform.isIOS) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Contact picker is only supported on Android and iOS.'),
+        ),
+      );
+      return;
+    }
+
+    try {
+      final picked =
+          await device_contacts.ContactsService.openDeviceContactPicker();
+      if (picked == null) return;
+
+      final displayName = picked.displayName ?? '';
+      String? phone;
+      String? email;
+
+      if (picked.phones != null && picked.phones!.isNotEmpty) {
+        phone = picked.phones!.first.value;
+      }
+      if (picked.emails != null && picked.emails!.isNotEmpty) {
+        email = picked.emails!.first.value;
+      }
+
+      final newContact = Contact(
+        id: UniqueKey().toString(),
+        ownerId: null,
+        name: displayName.isNotEmpty
+            ? displayName
+            : (phone ?? email ?? 'Unknown'),
+        status: 'active',
+        phone: phone,
+        email: email,
+        relation: null,
+        contactUserId: null,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+        avatarUrl: null,
+        notes: null,
+        isPrimary: false,
+      );
+
+      if (!mounted) return;
+
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Add Contact'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Name: ${newContact.name}'),
+              if (newContact.phone != null) Text('Phone: ${newContact.phone}'),
+              if (newContact.email != null) Text('Email: ${newContact.email}'),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                // TODO: replace with your actual save:
+                // await ref.read(contactsProvider.notifier).addContact(newContact);
+
+                Navigator.of(ctx).pop();
+
+                if (!mounted) return;
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(const SnackBar(content: Text('Contact added!')));
+              },
+              child: const Text('Add'),
+            ),
+          ],
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to pick contact: $e')));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -37,14 +168,11 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
         foregroundColor: cs.onSurface,
         title: const Text('Emergency Contacts'),
         actions: [
-          // keep your icons if you want the same look (search/filter)
           IconButton(
             tooltip: 'Search (UI only)',
             onPressed: () {},
             icon: const Icon(Icons.search),
           ),
-
-          // SORT (requirement)
           PopupMenuButton<ContactsSort>(
             tooltip: 'Sort',
             icon: const Icon(Icons.filter_list_rounded),
@@ -64,7 +192,9 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
         ],
       ),
       body: RefreshIndicator(
-        onRefresh: () => ref.read(contactsProvider.notifier).load(),
+        onRefresh: () async {
+          await ref.read(contactsProvider.notifier).load();
+        },
         child: state.loading
             ? const Center(child: CircularProgressIndicator())
             : state.error != null
@@ -126,7 +256,6 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
                       },
                       child: Stack(
                         children: [
-                          // Your existing tile (same design)
                           ContactCardTile(
                             contact: c,
                             onTap: () {
@@ -139,8 +268,6 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
                               );
                             },
                           ),
-
-                          // FAVORITE button (requirement) - overlays without redesigning the tile
                           Positioned(
                             right: 8,
                             top: 8,
@@ -170,6 +297,11 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
                   );
                 },
               ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        tooltip: 'Add Contact',
+        onPressed: _addFromContacts,
+        child: const Icon(Icons.add),
       ),
     );
   }
