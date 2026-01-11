@@ -1,3 +1,4 @@
+import 'package:emergency_alert/screens/profile/contacts/contacts_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 // gives access to themeController
@@ -8,7 +9,7 @@ import '../../services/emergency_request_service.dart';
 import 'emergency_detail_screen.dart';
 import 'share_location_screen.dart';
 import 'emergency_chat_screen.dart';
-import 'package:emergency_alert/screens/profile/contacts_screen.dart';
+
 import 'package:emergency_alert/screens/profile/profile_screen.dart';
 
 class EmergencyListScreen extends StatelessWidget {
