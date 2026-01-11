@@ -26,22 +26,16 @@ Future<void> main() async {
     anonKey: dotenv.get("SUPABASE_KEY"),
   );
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  final model = FirebaseAI.googleAI().generativeModel(
-    model: 'gemini-2.5-flash',
-  );
+  // final model =
+  //       FirebaseAI.googleAI().generativeModel(model: 'gemini-2.5-flash');
 
-  // Provide a prompt that contains text
-  final prompt = [Content.text('Write a story about a magic backpack.')];
+  // // Provide a prompt that contains text
+  // final prompt = [Content.text('Write a story about a magic backpack.')];
 
-  try {
-    // To generate text output, call generateContent with the text input
-    final response = await model.generateContent(prompt);
-    print(response.text);
-  } catch (e) {
-    // Handle Gemini API quota exceeded or other errors gracefully
-    debugPrint('Gemini API error: $e');
-    // Optionally, show a dialog or notification to the user if context is available
-  }
+  // To generate text output, call generateContent with the text input
+  // final response = await model.generateContent(prompt);
+  // print(response.text);
+  // runApp(const MainApp());
   runApp(const ProviderScope(child: MainApp()));
 }
 
