@@ -481,147 +481,28 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               ),
               const SizedBox(height: 20),
 
-              const Text(
-                'Medical & Emergency Info',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-              ),
-              const SizedBox(height: 8),
-
-              DropdownButtonFormField<String>(
-                initialValue: _bloodTypeCtrl.text.isEmpty ? null : _bloodTypeCtrl.text,
-                decoration: const InputDecoration(
-                  labelText: 'Blood type',
-                  border: OutlineInputBorder(),
+              Card(
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
                 ),
-                validator: (v) {
-                  // make required? comment this out if you want it optional
-                  // return (v == null || v.isEmpty) ? 'Blood type is required' : null;
-                  return null;
-                },
-                items: const ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']
-                    .map((bt) => DropdownMenuItem(value: bt, child: Text(bt)))
-                    .toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _bloodTypeCtrl.text = value ?? '';
-                  });
-                },
-              ),
-
-              const SizedBox(height: 12),
-
-              const Text(
-                'Allergies',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _allergyInputCtrl,
-                      decoration: const InputDecoration(
-                        labelText: 'Add allergy',
-                        border: OutlineInputBorder(),
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Row(
+                    children: const [
+                      Icon(Icons.medical_information_outlined),
+                      SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          'Medical information is managed in a separate screen for clarity and safety.',
+                        ),
                       ),
-                      onSubmitted: (_) => _addAllergy(),
-                    ),
+                    ],
                   ),
-                  const SizedBox(width: 8),
-                  IconButton(
-                    icon: const Icon(Icons.add),
-                    onPressed: _addAllergy,
-                  ),
-                ],
+                ),
               ),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                runSpacing: 4,
-                children: _allergyList.map((item) {
-                  return Chip(
-                    label: Text(item),
-                    deleteIcon: const Icon(Icons.close),
-                    onDeleted: () {
-                      setState(() {
-                        _allergyList.remove(item);
-                      });
-                    },
-                  );
-                }).toList(),
-              ),
+
               const SizedBox(height: 16),
-              TextFormField(
-                controller: _chronicCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Chronic conditions',
-                  border: OutlineInputBorder(),
-                  alignLabelWithHint: true,
-                ),
-                maxLines: 2,
-                maxLength: 300, // optional
-              ),
-
-              const SizedBox(height: 12),
-
-              TextFormField(
-                controller: _medicationsCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Medications in use',
-                  border: OutlineInputBorder(),
-                  alignLabelWithHint: true,
-                ),
-                maxLines: 2,
-                validator: (v) => _validateOptionalText(
-                  v,
-                  fieldName: 'Medications',
-                  maxLength: 300,
-                ),
-              ),
-
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _disabilitiesCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Disabilities / mobility notes',
-                  border: OutlineInputBorder(),
-                  alignLabelWithHint: true,
-                ),
-                maxLines: 2,
-                validator: (v) => _validateOptionalText(
-                  v,
-                  fieldName: 'Disabilities / mobility notes',
-                  maxLength: 300,
-                ),
-              ),
-
-              const SizedBox(height: 12),
-
-              TextFormField(
-                controller: _preferredHospitalCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Preferred hospital / doctor',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              TextFormField(
-                controller: _otherNotesCtrl,
-                decoration: const InputDecoration(
-                  labelText: 'Other important notes for emergencies',
-                  border: OutlineInputBorder(),
-                  alignLabelWithHint: true,
-                ),
-                maxLines: 3,
-                validator: (v) => _validateOptionalText(
-                  v,
-                  fieldName: 'Other notes',
-                  maxLength: 500,
-                ),
-              ),
-
-              const SizedBox(height: 24),
 
               SizedBox(
                 width: double.infinity,

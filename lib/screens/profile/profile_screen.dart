@@ -1,3 +1,4 @@
+import 'package:emergency_alert/screens/drawer/settings/settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -5,8 +6,24 @@ import '../../models/user_profile.dart';
 import '../../services/profile_service.dart';
 
 import 'edit_profile_screen.dart';
-import 'contacts_screen.dart';
-import 'people_who_added_me_screen.dart';
+import 'contacts/contacts_screen.dart';
+import 'contacts/people_who_added_me_screen.dart';
+
+import 'package:emergency_alert/screens/auth/login.dart';
+import '../../main.dart';
+
+import 'package:emergency_alert/widgets/profile/profile_header_card.dart';
+import 'package:emergency_alert/widgets/profile/profile_menu_item.dart';
+import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../../models/user_profile.dart';
+import '../../services/profile_service.dart';
+
+import 'edit_profile_screen.dart';
+import 'contacts/contacts_screen.dart';
+import 'contacts/people_who_added_me_screen.dart';
+import 'medical/medical_info_screen.dart';
 
 import 'package:emergency_alert/screens/auth/login.dart';
 import '../../main.dart';
@@ -116,8 +133,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 children: [
                   ProfileMenuItem(
                     icon: Icons.person_outline,
-                    title: 'Emergency Info',
-                    subtitle: 'Name, age, gender, status, medical info',
+                    title: 'Basic Profile',
+                    subtitle: 'Name, phone, status, and basic details',
                     onTap: () {
                       Navigator.push(
                         context,
@@ -125,6 +142,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           builder: (_) => const EditProfileScreen(),
                         ),
                       ).then((_) => _loadProfile());
+                    },
+                  ),
+                  const Divider(height: 0),
+                  ProfileMenuItem(
+                    icon: Icons.medical_information_outlined,
+                    title: 'Medical Information',
+                    subtitle: 'Blood type, allergies, conditions, medications',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const MedicalInfoScreen(),
+                        ),
+                      );
                     },
                   ),
                   const Divider(height: 0),
@@ -174,57 +205,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               child: Column(
                 children: [
-                  ListTile(
-                    leading: Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: theme.colorScheme.primary.withOpacity(0.08),
-                      ),
-                      child: Icon(
-                        Icons.dark_mode_outlined,
-                        size: 20,
-                        color: theme.colorScheme.primary,
-                      ),
-                    ),
-                    title: Text(
-                      'Dark Mode',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    subtitle: Text(
-                      themeController.isSystem
-                          ? 'System default'
-                          : (themeController.isDark ? 'Enabled' : 'Disabled'),
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurface.withOpacity(0.7),
-                      ),
-                    ),
-                    trailing: Switch(
-                      value: themeController.isDark,
-                      onChanged: (v) {
-                        setState(() => themeController.setDark(v));
-                      },
-                    ),
-                    onLongPress: () {
-                      setState(() => themeController.setSystem());
+                  ProfileMenuItem(
+                    icon: Icons.lock_outline,
+                    title: 'Permissions & Settings',
+                    subtitle: 'Location, notifications, theme, language',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const SettingsScreen(),
+                        ),
+                      );
                     },
-                  ),
-                  const Divider(height: 0),
-                  ProfileMenuItem(
-                    icon: Icons.notifications_outlined,
-                    title: 'Notification Settings',
-                    subtitle: 'Control emergency alerts',
-                    onTap: () {},
-                  ),
-                  const Divider(height: 0),
-                  ProfileMenuItem(
-                    icon: Icons.language_outlined,
-                    title: 'Language',
-                    subtitle: 'Change app language',
-                    onTap: () {},
                   ),
                 ],
               ),
