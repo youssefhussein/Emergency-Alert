@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-enum EmergencyType { ambulance, police, fire, hospital }
+enum EmergencyType { ambulance, police, fire, car }
 
 class EmergencyService {
   final EmergencyType type;
@@ -70,24 +70,23 @@ const emergencyServices = <EmergencyService>[
     availableServices: [
       'Fire Response',
       'Rescue Operations',
-      'Hazmat',
       'Emergency Medical',
     ],
   ),
   EmergencyService(
-    type: EmergencyType.hospital,
-    name: 'Hospital',
-    number: '125',
-    icon: Icons.local_hospital_outlined,
+    type: EmergencyType.car,
+    name: 'Car',
+    number: '126',
+    icon: Icons.car_crash,
     background: Color(0xFFE9FFF1),
     iconColor: Color(0xFF00C853),
     reassuranceText:
-        'Medical professionals are on their way. Keep breathing slowly and steadily.',
+        'A tow truck is on its way to you. Stay calm and wait for the truck to arrive.',
     availableServices: [
-      'Emergency Care',
-      'Ambulance',
-      'Trauma Care',
-      '24/7 Support',
+      'Car accident',
+      'Tow Truck',
+      'Roadside Assistance',
+      'Car Lockout',
     ],
   ),
 ];

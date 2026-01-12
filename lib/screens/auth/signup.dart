@@ -63,7 +63,7 @@ class _SignupScreenState extends State<SignupScreen> {
           ),
         ),
       );
-      Navigator.push(
+      Navigator.pushReplacement(
         context,
         MaterialPageRoute<void>(
           builder: (context) => const EmergencyListScreen(),
@@ -280,7 +280,7 @@ class _SignupScreenState extends State<SignupScreen> {
                       ),
                       GestureDetector(
                         onTap: () {
-                          Navigator.push(
+                          Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
                               builder: (context) => LoginScreen(),
@@ -296,6 +296,14 @@ class _SignupScreenState extends State<SignupScreen> {
                         ),
                       ),
                     ],
+                  ),
+                  const SizedBox(height: 14),
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/responder-login');
+                    },
+                    icon: const Icon(Icons.badge_outlined),
+                    label: const Text('I\'m a Responder'),
                   ),
                 ],
               ),

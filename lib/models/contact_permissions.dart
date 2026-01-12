@@ -1,4 +1,3 @@
-
 class ContactPermissions {
   final int id;
   final String? ownerId;
@@ -14,7 +13,7 @@ class ContactPermissions {
   final bool canViewStatus;
   final bool canViewMedical;
 
-  ContactPermissions({
+  const ContactPermissions({
     required this.id,
     required this.ownerId,
     required this.viewerId,

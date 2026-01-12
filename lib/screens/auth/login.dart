@@ -40,7 +40,7 @@ class _LoginScreenState extends State<LoginScreen> {
       );
       if (res.session != null) {
         if (!mounted) return;
-        Navigator.push(
+        Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const EmergencyListScreen()),
         );
@@ -230,7 +230,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       Text('New Member? ', style: TextStyle(color: textColor)),
                       GestureDetector(
                         onTap: () {
-                          Navigator.push(
+                          Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
                               builder: (context) => SignupScreen(),
@@ -246,6 +246,14 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                     ],
+                  ),
+                  const SizedBox(height: 14),
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/responder-login');
+                    },
+                    icon: const Icon(Icons.badge_outlined),
+                    label: const Text('I\'m a Responder'),
                   ),
                 ],
               ),

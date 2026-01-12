@@ -1,4 +1,4 @@
-import '../../models/contact.dart';
+import '../../../models/contact.dart';
 
 enum ContactsSort { nameAsc, favoritesFirst }
 
@@ -6,7 +6,10 @@ class ContactsState {
   final bool loading;
   final String? error;
   final List<Contact> items;
-  final Set<String> favorites;
+
+  /// UI-only favorites (local). You can persist this with SharedPreferences later if you want.
+  final Set<int> favorites;
+
   final ContactsSort sort;
 
   const ContactsState({
@@ -21,7 +24,7 @@ class ContactsState {
     bool? loading,
     String? error,
     List<Contact>? items,
-    Set<String>? favorites,
+    Set<int>? favorites,
     ContactsSort? sort,
   }) {
     return ContactsState(

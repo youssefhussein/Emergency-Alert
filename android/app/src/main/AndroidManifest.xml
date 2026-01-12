@@ -80,6 +80,7 @@
         <!-- Contacts permissions for contacts_service -->
         <uses-permission android:name="android.permission.READ_CONTACTS" />
         <uses-permission android:name="android.permission.WRITE_CONTACTS" />
+        
 
         <!-- Voice note (microphone) -->
         <uses-permission android:name="android.permission.RECORD_AUDIO" />
