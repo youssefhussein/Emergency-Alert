@@ -142,19 +142,19 @@ class EmergencyRequestService {
 
 
     //assign a responder or notify them idk
-    final etas = await EstimatedTimeArrivalService().fetchResponderETAs(
-      emergencyLat: latitude!,
-      emergencyLng: longitude!,
-      emergencyType: service.type.name.toLowerCase(),
-    );
+    // final etas = await EstimatedTimeArrivalService().fetchResponderETAs(
+    //   emergencyLat: latitude!,
+    //   emergencyLng: longitude!,
+    //   emergencyType: service.type.name.toLowerCase(),
+    // );
     
-    if (etas.isNotEmpty) {
-      final firstResponder = etas.first;
-      debugPrint("This is the first responder in the listtt $firstResponder");
-      await _supabase.from('emergencies').update({
-        'responder_id': firstResponder.responderId,
-      }).eq('id', emergencyId);
-    }
+    // if (etas.isNotEmpty) {
+    //   final firstResponder = etas.first;
+    //   debugPrint("This is the first responder in the listtt $firstResponder");
+    //   await _supabase.from('emergencies').update({
+    //     'responder_id': firstResponder.responderId,
+    //   }).eq('id', emergencyId);
+    // }
 
     return emergencyId;
   }

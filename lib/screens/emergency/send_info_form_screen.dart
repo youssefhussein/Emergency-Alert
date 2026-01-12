@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:emergency_alert/services/geocoding_service.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -86,12 +87,12 @@ class _SendInfoFormScreenState extends State<SendInfoFormScreen> {
       _lat = pos.latitude;
       _lng = pos.longitude;
 
-      // try {
-      //   final address = await GeocodingService().reverseGeocode(_lat!, _lng!);
-      //   _detectedAddress = (address.trim().isNotEmpty) ? address.trim() : null;
-      // } catch (_) {
-      //   _detectedAddress = null; // don't block
-      // }
+      try {
+        final address = await GeocodingService().geocodeAPI(_lat!, _lng!);
+        _detectedAddress = (address.trim().isNotEmpty) ? address.trim() : null;
+      } catch (_) {
+        _detectedAddress = null; // don't block
+      }
     } catch (e) {
       _lat = null;
       _lng = null;
